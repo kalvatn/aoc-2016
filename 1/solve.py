@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import math
 
 
 NORTH = 'N'
@@ -9,6 +10,13 @@ WEST  = 'W'
 
 RIGHT = 'R'
 LEFT  = 'L'
+
+COUNTS = {
+    NORTH : 0,
+    SOUTH : 0,
+    EAST  : 0,
+    WEST  : 0
+}
 
 
 
@@ -20,16 +28,24 @@ def main(lines):
         for direction in line.split(','):
             directions.append(direction.strip())
 
-    print directions
+    # print directions
     facing = 'N'
     for entry in directions:
         direction = entry[0]
         count = int(entry[1::])
-        print '%s %d' % (direction, count)
+        # print '%s %d' % (direction, count)
 
         old_facing = facing
         facing = new_facing(old_facing, direction)
-        print 'was facing %s, direction %s, now facing %s' % (old_facing, direction, facing)
+        COUNTS[facing] += count
+
+        # print 'was facing %s, direction %s, now facing %s' % (old_facing, direction, facing)
+
+    # print COUNTS
+    vertical= math.fabs(COUNTS[NORTH] - COUNTS[SOUTH])
+    horizontal = math.fabs(COUNTS[EAST] - COUNTS[WEST])
+    # print "vertical : %s, horizontal %d" % (vertical, horizontal)
+    print "%d" % (vertical + horizontal)
 
 
 def new_facing(current, direction):
