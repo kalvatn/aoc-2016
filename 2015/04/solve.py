@@ -8,7 +8,8 @@ def main(lines):
     print secret
     while True:
         digest = hashlib.md5(secret + str(index)).hexdigest()
-        if digest.startswith('00000'):
+        # if digest.startswith('00000'): # part 1
+        if digest.startswith('000000'): # part 2
             break
         index += 1
     print index
