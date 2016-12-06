@@ -24,9 +24,36 @@ def main(lines):
             nice_words.append(word)
     print len(nice_words)
 
+def part_two(lines):
+    # lines = [
+    #     'qjhvhtzxzqqjkmpb',
+    #     'xxyxx',
+    #     'uurcxstgmygtbstg',
+    #     'ieodomkazucvgmuy',
+    #     'nofhmbxififwroeg'
+    # ]
+
+    very_nice = 0
+    for word in lines:
+        # print word
+        if legal_repeats(word):
+            very_nice += 1
+
+
+    print very_nice
+    # assert len(all_words['good']) == 2
+
+def legal_repeats(word):
+    if all(word[i] != word[i+2] for i in range(len(word) -2)):
+        return False
+    if all(word.count(str(word[i]+word[i+1])) != 2 for i in range(len(word)-1)):
+        return False
+    return True
+
 if __name__ == '__main__':
     lines = []
     with open('input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
+    part_two(lines)
