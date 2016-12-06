@@ -1,8 +1,38 @@
 #!/usr/bin/env python
 
 import operator
+import string
+
+class Room(object):
+    def __init__(self, name, sector_id, checksum):
+        self.name = name
+        self.sector_id = sector_id
+        self.checksum = checksum
 
 def main(lines):
+    real_rooms = get_real_rooms(lines)
+    print 'part one : %d' % (sum([r.sector_id for r in real_rooms ]))
+    # print [ r.name for r in real_rooms]
+    decrypted_rooms = [ Room(rotate(r.name, r.sector_id), r.sector_id, r.checksum) for r in real_rooms]
+    # print [ r.name for r in decrypted_rooms ]
+    print ''.join([ 'part two : %s - %d' % (r.name, r.sector_id) for r in decrypted_rooms if 'north' in r.name ])
+
+
+
+
+def rotate(name, times):
+    rot = times % 26
+    alpha = string.ascii_lowercase
+    rotated = ''
+    for char in name:
+        if char == '-':
+            rotated += ' '
+        else:
+            rotated += alpha[(alpha.index(char) + rot) % len(alpha)]
+    return rotated
+
+
+def get_real_rooms(lines):
     real_rooms = []
     for room in lines:
         last_dash = room.rfind('-')
@@ -12,8 +42,8 @@ def main(lines):
         sector_id = room[last_dash+1:first_bracket]
         checksum = room[first_bracket+1:last_bracket]
         if is_real(name, checksum):
-            real_rooms.append(int(sector_id))
-    print sum(real_rooms)
+            real_rooms.append(Room(name, int(sector_id), checksum))
+    return real_rooms
 
 def is_real(name, checksum):
     counts_by_letter = group_letters_by_count(name)
