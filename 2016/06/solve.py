@@ -2,31 +2,31 @@
 import operator
 
 def main(lines):
-    lines = [
-'eedadn',
-'drvtee',
-'eandsr',
-'raavrd',
-'atevrs',
-'tsrnev',
-'sdttsa',
-'rasrtv',
-'nssdts',
-'ntnada',
-'svetve',
-'tesnvt',
-'vntsnd',
-'vrdear',
-'dvrsen',
-'enarar',
-            ]
+    # lines = [
+# 'eedadn',
+# 'drvtee',
+# 'eandsr',
+# 'raavrd',
+# 'atevrs',
+# 'tsrnev',
+# 'sdttsa',
+# 'rasrtv',
+# 'nssdts',
+# 'ntnada',
+# 'svetve',
+# 'tesnvt',
+# 'vntsnd',
+# 'vrdear',
+# 'dvrsen',
+# 'enarar',
+    #         ]
 
     words_by_columns = group_words_by_columns(lines)
     error_corrected = ''
     for word in words_by_columns:
         freqs = letter_frequencies(word)
         sorted_by_frequency = sorted(freqs.items(), key=operator.itemgetter(1))
-        error_corrected += sorted_by_frequency[-1][0]
+        error_corrected += sorted_by_frequency[0][0]
 
     print error_corrected
 
