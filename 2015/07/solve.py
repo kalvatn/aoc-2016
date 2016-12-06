@@ -24,14 +24,24 @@ def main(lines):
     # ]
 
     for line in lines:
-        print line
         inputs, output = line.split(' -> ')
         WIRES[output.strip()] = inputs.strip().split(' ')
 
-    print WIRES
-    print get_wire('a')
+    part1 = get_wire('a')
+    WIRE_RESULTS.clear()
 
-    # print WIRE_RESULTS
+    WIRES['b'] = [ str(part1) ]
+    part2 = get_wire('a')
+
+    print 'part 1 : %d' % part1
+    print 'part 2 : %d' % part2
+
+
+def reset_wires(lines):
+    WIRES.clear()
+    WIRE_RESULTS.clear()
+
+
 
 
 def get_wire(key):
