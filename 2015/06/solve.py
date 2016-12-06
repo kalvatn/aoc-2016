@@ -11,6 +11,7 @@ STATE_ON = 1
 STATE_OFF = 0
 
 MATRIX = [[0 for x in range(WIDTH)] for y in range(HEIGHT)]
+MATRIX_2 = [[0 for x in range(WIDTH)] for y in range(HEIGHT)]
 
 def main(lines):
     # lines = [
@@ -37,25 +38,37 @@ def main(lines):
         for row in range(start_x, end_x + 1):
             for col in range(start_y, end_y + 1):
                 current_state = MATRIX[row][col]
+                brightness_change = 0
                 if command == TOGGLE:
                     new_state = STATE_ON if current_state == STATE_OFF else STATE_OFF
+                    brightness_change = 2
                 else:
                     new_state = STATE_ON if command == TURN_ON else STATE_OFF
+                    brightness_change = 1 if command == TURN_ON else -1
                 MATRIX[row][col] = new_state
+                new_brightness = MATRIX_2[row][col] + brightness_change
+                if new_brightness >= 0:
+                    MATRIX_2[row][col] = new_brightness
                 # print "(%d, %d) current %d, command : %s, new : %d" % (row, col, current_state, command, new_state)
 
         # print 'matrix after'
         # print_matrix(start_x, start_y, end_x, end_y)
 
     count_on = 0
+    sum_brightness = 0
     for x in range(WIDTH):
         for y in range(HEIGHT):
             if MATRIX[x][y] == STATE_ON:
                 count_on += 1
+            sum_brightness += MATRIX_2[x][y]
 
 
-    print count_on
+
+
+    print 'part 1 : %d' % count_on
+    print 'part 2 : %d' % sum_brightness
     # print_matrix()
+
 
 def print_matrix(row_start=0, row_end=WIDTH, col_start=0, col_end=HEIGHT):
     for x in range (WIDTH):
