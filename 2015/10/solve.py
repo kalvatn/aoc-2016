@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-ITERATIONS = 40
 def main(lines):
     for sequence in lines:
-        print 'old : ' + sequence
-        for i in range(1, ITERATIONS+1):
+        original = sequence
+        for i in range(0, 40):
             sequence = new_sequence(sequence)
 
-        part1 = len(sequence)
-        part2 = ''
+        print 'part 1 : %s' % (len(sequence))
+        sequence = original
+        for i in range(0, 50):
+            sequence = new_sequence(sequence)
 
-        print 'part 1 : %s' % (part1)
-        print 'part 2 : %s' % (part2)
+        print 'part 2 : %s' % (len(sequence))
 
 def new_sequence(sequence):
     digit = sequence[0]
