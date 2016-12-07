@@ -14,6 +14,12 @@ class Location(object):
     def get_routes_ordered_by_shortest(self):
         return sorted(self.routes.items(), key=operator.itemgetter(1))
 
+    def get_routes_ordered_by_longest(self):
+
+        shortest = sorted(self.routes.items(), key=operator.itemgetter(1))
+        shortest.reverse()
+        return shortest
+
     def __str__(self):
         return '%s - routes : %s' % (self.name, self.routes)
     def __repr__(self):
@@ -39,14 +45,20 @@ def main(lines):
     visited = []
     distance = 0
     min_distance = -1
+    max_distance = -1
     for loc in locations.values():
         distance = visit(loc, 0, [], locations)
         if min_distance < 0:
             min_distance = distance
         if distance < min_distance:
             min_distance = distance
+
+        if max_distance < 0:
+            max_distance = distance
+        if distance > max_distance:
+            max_distance = distance
     part1 = min_distance
-    part2 = ''
+    part2 = max_distance
 
     print 'part 1 : %s' % (part1)
     print 'part 2 : %s' % (part2)
@@ -56,7 +68,9 @@ def visit(start, distance, visited, locations):
     # print 'visited : %s , distance : %d' % (visited, distance)
     if len(visited) == len(locations):
         return distance
-    for k in start.get_routes_ordered_by_shortest():
+
+    # for k in start.get_routes_ordered_by_shortest():
+    for k in start.get_routes_ordered_by_longest():
         if k[0] in visited:
             continue
         distance += k[1]
