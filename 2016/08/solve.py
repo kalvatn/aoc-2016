@@ -68,7 +68,7 @@ def rotate_col(col, by):
 
 def print_screen():
     for row in SCREEN:
-        print ' '.join([ str(x) for x in row])
+        print ' '.join([ ('X' if x == ON else '.') for x in row])
 
 def count_on():
     count = 0
