@@ -59,8 +59,6 @@ def rotate_row(row, by):
 def rotate_col(col, by):
     print '%s %d by %d' % (ROTATE_COL, col, by)
     items = deque([ SCREEN[y][col] for y in range(0, HEIGHT)])
-    for y in range(0, HEIGHT):
-        items.append(SCREEN[y][col])
     items.rotate(by)
     for y in range(0, HEIGHT):
         SCREEN[y][col] = items[y]
