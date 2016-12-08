@@ -1,21 +1,46 @@
 #!/usr/bin/env python
 
 def main(lines):
-    sequence = lines[0]
+    for sequence in lines:
+        original = sequence
+        for i in range(0, 40):
+            sequence = new_sequence(sequence)
+
+        print 'part 1 : %s' % (len(sequence))
+        sequence = original
+        for i in range(0, 50):
+            sequence = new_sequence(sequence)
+
+        print 'part 2 : %s' % (len(sequence))
+
+def new_sequence(sequence):
+    digit = sequence[0]
+    count = 0
+    builder = []
+    for i in sequence:
+        if i != digit:
+            builder.append(str(count) + digit)
+            digit = i
+            count = 0
+        count += 1
+
+    builder.append(str(count) + digit)
+    return ''.join(builder)
 
 
-    part1 = len(sequence)
-    part2 = ''
 
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
+
+
 
 
 if __name__ == '__main__':
     test_input = [
-        # 'test',
-        # 'strings',
-        # 'here'
+        # '1',
+        # '11',
+        # '21',
+        # '1211',
+        # '111221'
+
     ]
     lines = []
     if test_input:
