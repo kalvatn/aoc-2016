@@ -34,14 +34,13 @@ class Test(unittest.TestCase):
 LB = '('
 RB = ')'
 def main(lines):
-    total_length = 0
+    part1 = 0
+    part2 = 0
     for line in lines:
-        decompressed_one = decompress_one(line)
-        total_length += len(decompressed_one)
+        part1 += len(decompress_one(line))
+        part2 += decompress_two(line)
 
 
-    part1 = total_length
-    part2 = ''
 
     print 'part 1 : %s' % (part1)
     print 'part 2 : %s' % (part2)
@@ -86,7 +85,7 @@ def decompress_two(line):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
     lines = []
     with open('input') as file:
         for line in file:
