@@ -25,8 +25,8 @@ class Test(unittest.TestCase):
         for case in cases:
             case_input = case['input']
             case_expect = case['expect']
-            actual = part_one(case_input)
-            self.assertEquals(actual, case_expect, "part_one('%s'), expected '%s', was '%s'" % (case_input, case_expect, actual))
+            actual = part_two(case_input)
+            self.assertEquals(actual, case_expect, "part_two('%s'), expected '%s', was '%s'" % (case_input, case_expect, actual))
 
 def main(lines):
     print lines
