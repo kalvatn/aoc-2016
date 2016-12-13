@@ -5,6 +5,7 @@ import time
 
 WALL='#'
 OPEN='.'
+STEP_INTERVAL_SECONDS = 0.1
 
 class Node(object):
     def __init__(self, value, x, y, parent=None):
@@ -66,17 +67,17 @@ class AStar(object):
     def search(self, start_point, goal_point, step=False):
         start = self.nodes[start_point[0]][start_point[1]]
         goal = self.nodes[goal_point[1]][goal_point[0]]
-        print 'start : %s' % start
-        print 'goal : %s' % goal
+        # print 'start : %s' % start
+        # print 'goal : %s' % goal
         current = start
         self.open.add(current)
         followed_path = []
         while self.open:
             current = min(self.open, key=lambda node: node.get_f_score())
-            followed_path.append((current.x, current.y))
             if step:
+                followed_path.append((current.x, current.y))
                 print_map(self.table, followed_path)
-                time.sleep(1)
+                time.sleep(STEP_INTERVAL_SECONDS)
             if current == goal:
                 path = []
                 while current.parent:
@@ -132,7 +133,8 @@ def print_map(table, path=[]):
         row = '%d ' % (x)
         for y in range(0, len(table[x])):
             if (x, y) in path:
-                indicator = 'P'
+                CSI = "\x1B["
+                indicator = CSI + "31;40m" + 'P' + CSI + "0m"
                 if (x, y) == path[0]:
                     indicator = 'S'
 
@@ -146,18 +148,22 @@ def print_map(table, path=[]):
 
 
 def main(lines):
-    width = 10
-    height = 10
-    magic_number = 10
-    # magic_number = int(lines[0])
+    width = 50
+    height = 50
+    # magic_number = 10
+    magic_number = int(lines[0])
     table = [[get_map_value(x, y, magic_number) for x in range(0,width)] for y in range(0, height)]
-    print_map(table)
+    # print_map(table)
 
     astar = AStar(table)
     # path = astar.search((1, 1), (7,4))
-    path = astar.search((1, 1), (7,4), True)
+    # path = astar.search((1, 1), (7,4), True)
+    path = astar.search((1, 1), (31,39), False)
+
+    # subtract start and goal nodes
+    length = len(path) - 2 - 1
     # print_map(table, path)
-    print 'part1 : %d' % (len(path) - 1)
+    print 'part1 : %d' % (length)
 
 
 if __name__ == '__main__':
