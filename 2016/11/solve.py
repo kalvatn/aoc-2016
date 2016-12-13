@@ -3,6 +3,7 @@
 
 import re
 import unittest
+import itertools
 
 
 class InputParser(object):
@@ -41,38 +42,108 @@ class InputParser(object):
         return self.components
 
 class State(object):
-    def __init__(self, floors):
-        self.floors = floors
+    def __init__(self, floors, current_floor):
+        self._floors = floors
+        self._current_floor = current_floor
+
+    @property
+    def floors(self):
+        return self._floors
+
+    @property
+    def current_floor(self):
+        return self._current_floor
 
     def is_valid(self):
-        for floor in floors:
+        for floor in self.floors:
             chips = [ chip.split('-')[0] for chip in floor if chip.endswith('-microchip') ]
             generators = [ gen.split('-')[0] for gen in floor if gen.endswith('-generator') ]
             for element in chips:
                 if element not in generators and len(generators) > 0:
                     return False
+        return True
 
+class StateGenerator(object):
+    def __init__(self, current):
+        self._current = current
+        self._successors = []
+
+    @property
+    def current(self):
+        return self._current
+
+    @property
+    def successors(self):
+        return self._successors
+
+    def generate_successors(self):
+        states = []
+        current_floor = self.current.current_floor
+        current_floors = self.current.floors
+        can_go_down = current_floor > 0
+        can_go_up = current_floor < 3
+
+        if can_go_up:
+            floors = [ [], [], [], [] ]
+            for i in range(current_floor, len(current_floors) - 1):
+                candidates = [ State(x, i) for x in itertools.permutations(current_floors) ]
+                states += [ state for state in candidates if state.is_valid() ]
+
+        if can_go_down:
+            floors = [ [], [], [], [] ]
+            for i in range(current_floor, 0, -1):
+                candidates = [ State(x, i) for x in itertools.permutations(current_floors) ]
+                states += [ state for state in candidates if state.is_valid() ]
+
+        self._successors = states
 
 
 
 class Test(unittest.TestCase):
-    def test_parse(self):
-        lines = [
+    def setUp(self):
+        self.lines = [
 'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
 'The second floor contains a hydrogen generator.',
 'The third floor contains a lithium generator.',
 'The fourth floor contains nothing relevant.',
                 ]
-        # lines = [
+
+        # self.lines = [
+# 'The first floor contains a hydrogen-compatible microchip and a lithium microchip.',
+# 'The second floor contains a hydrogen generator.',
+# 'The third floor contains a lithium generator.',
+# 'The fourth floor contains nothing relevant.',
+        #         ]
+
+        # self.lines = [
 # 'The first floor contains a promethium generator and a promethium-compatible microchip.',
 # 'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
 # 'The third floor contains a cobalt-compatible microchip, a curium-compatible microchip, a ruthenium-compatible microchip, and a plutonium-compatible microchip.',
 # 'The fourth floor contains nothing relevant.',
         # ]
 
-        parser = InputParser(lines)
+    def test_parse(self):
+        parser = InputParser(self.lines)
         for floor in parser.get_initial_state():
             print floor
+
+    def test_state(self):
+        floors = InputParser(self.lines).get_initial_state()
+        state = State(floors, 0)
+        print state.is_valid()
+
+    def test_state_generator(self):
+        floors = InputParser(self.lines).get_initial_state()
+        state = State(floors, 0)
+        gen = StateGenerator(state)
+        gen.generate_successors()
+        i = 0
+        for state in gen.successors:
+            print i
+            for floor in state.floors:
+                print floor
+            i += 1
+
 
     def test_part_two_examples(self):
         pass
