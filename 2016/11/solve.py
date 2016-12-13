@@ -5,13 +5,13 @@ import unittest
 
 
 class Test(unittest.TestCase):
-    def test_part_one_examples(self):
-        lines = [
-'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
-'The second floor contains a hydrogen generator.',
-'The third floor contains a lithium generator.',
-'The fourth floor contains nothing relevant.',
-                ]
+    def test_parse(self):
+        # lines = [
+# 'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
+# 'The second floor contains a hydrogen generator.',
+# 'The third floor contains a lithium generator.',
+# 'The fourth floor contains nothing relevant.',
+        #         ]
         lines = [
 'The first floor contains a promethium generator and a promethium-compatible microchip.',
 'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
@@ -20,14 +20,37 @@ class Test(unittest.TestCase):
         ]
 
         import re
-        # pattern = re.compile(r'The (first|second|third|fourth) floor contains ((and|,)[\sa]*([\w]+(?:-compatible)? (microchip|generator)))*')
-        pattern = re.compile(r'^The (first|second|third|fourth) floor contains (?:a (([\w]+)(?:-compatible)?\s(microchip|generator)[\s]*(and|,)*)|nothing relevant)*\.$')
+        pattern = re.compile(r'(?:The (first|second|third|fourth) floor contains)*(?:,?\s(?:and )?a\s([\w]+)(?:-compatible)?\s(microchip|generator))\.*')
+
+        pairs = { }
+        floors = [ [], [], [], [] ]
         for line in lines:
-            matches = pattern.findall(line)
-            if matches:
-                for match in matches:
-                    print match
-                    # print match.group(0)
+            for match in pattern.finditer(line):
+                element = match.groups()[1]
+                part = match.groups()[2]
+                component = '%s-%s' % (element, part)
+                if element not in pairs:
+                    pairs[element] = set()
+                pairs[element].add(part)
+
+                if match.groups()[0]:
+                    floor = match.groups()[0]
+
+                if floor == 'first':
+                    floors[0].append(component)
+                elif floor == 'second':
+                    floors[1].append(component)
+                elif floor == 'third':
+                    floors[2].append(component)
+                elif floor == 'fourth':
+                    floors[3].append(component)
+
+        for k, v in pairs.items():
+            print '%s -> %s' % (k, v)
+
+        for floor in floors:
+            print floor
+
 
     def test_part_two_examples(self):
         pass
