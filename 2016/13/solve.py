@@ -43,52 +43,6 @@ class Node(object):
         return str(self)
 
 
-class BFS(object):
-    def __init__(self, table):
-        self.table = table
-        self.nodes = [ [ Node(table[x][y], x, y) for y in range(0, len(table)) ] for x in range(0, len(table)) ]
-        self.queue = []
-
-    def is_valid_point(self, point):
-        x, y = point
-        valid = x >= 0 and x < len(self.table) and y >= 0 and y < len(self.table) and self.nodes[x][y].value != WALL
-        print 'point %s valid : %s' % (point, valid)
-        return valid
-
-    def get_neighbours(self, node):
-        x, y = node.x, node.y
-        left = (x-1, y)
-        right = (x+1, y)
-        up = (x, y-1)
-        down = (x, y+1)
-        return [ self.nodes[point[0]][point[1]] for point in [ left, right, up, down ] if self.is_valid_point(point) ]
-
-    def search(self, start_point, goal_point, debug=False):
-        start = self.nodes[start_point[0]][start_point[1]]
-        goal = self.nodes[goal_point[1]][goal_point[0]]
-        print 'start %s' % start
-        print 'goal %s' % goal
-        visited = set()
-        self.queue.append(start)
-        steps = 0
-        while len(self.queue) > 0:
-            current = self.queue.pop(0)
-            visited.add((current.x, current.y))
-            if current == goal:
-                print "found"
-                break
-            for node in self.get_neighbours(current):
-                print node
-                visited.add((node.x, node.y))
-                self.queue.append(node)
-            steps += 1
-
-            if steps == 50:
-                print len(visited)
-
-
-
-
 
 class AStar(object):
     def __init__(self, table):
@@ -132,7 +86,6 @@ class AStar(object):
 
             print 'step %d, current : %s, visited : %d' % (steps, (current.x, current.y), len(visited) )
             visited.add((current.x, current.y))
-            time.sleep(0.5)
 
             if current == goal:
                 path = []
@@ -174,14 +127,6 @@ class AStar(object):
                 print_map(self.table, followed_path)
                 time.sleep(STEP_INTERVAL_SECONDS)
         raise ValueError('no valid path found')
-
-class Test(unittest.TestCase):
-    def test_part_one_examples(self):
-        pass
-
-    def test_part_two_examples(self):
-        pass
-
 
 def formula(x, y):
     return x*x + 3*x + 2*x*y + y + y*y
@@ -237,13 +182,10 @@ def main(lines):
     # path = astar.search((1, 1), (7,4))
     # path = astar.search((1, 1), (7,4), True)
     # path = astar.search((1, 1), (31,39))
-    # path = astar.search((1, 1), (31,39), False)
-    bfs = BFS(table)
-    bfs.search((1,1), (31, 39))
+    path = astar.search((1, 1), (31,39), True)
 
-    # subtract start and goal nodes
-    # length = len(path) - 1
-    # print 'part1 : %d' % (length)
+    length = len(path) - 1
+    print 'part1 : %d' % (length)
 
 
 if __name__ == '__main__':
