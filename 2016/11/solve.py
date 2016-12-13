@@ -1,56 +1,78 @@
 #!/usr/bin/env python
 
+
+import re
 import unittest
 
 
+class InputParser(object):
+    def __init__(self, lines):
+        self.lines = lines
+        self.floors = [ [], [], [], [] ]
+        self.components = []
+        self.parse()
 
-class Test(unittest.TestCase):
-    def test_parse(self):
-        # lines = [
-# 'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
-# 'The second floor contains a hydrogen generator.',
-# 'The third floor contains a lithium generator.',
-# 'The fourth floor contains nothing relevant.',
-        #         ]
-        lines = [
-'The first floor contains a promethium generator and a promethium-compatible microchip.',
-'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
-'The third floor contains a cobalt-compatible microchip, a curium-compatible microchip, a ruthenium-compatible microchip, and a plutonium-compatible microchip.',
-'The fourth floor contains nothing relevant.',
-        ]
-
-        import re
+    def parse(self):
         pattern = re.compile(r'(?:The (first|second|third|fourth) floor contains)*(?:,?\s(?:and )?a\s([\w]+)(?:-compatible)?\s(microchip|generator))\.*')
-
-        pairs = { }
-        floors = [ [], [], [], [] ]
-        for line in lines:
+        for line in self.lines:
             for match in pattern.finditer(line):
                 element = match.groups()[1]
                 part = match.groups()[2]
                 component = '%s-%s' % (element, part)
-                if element not in pairs:
-                    pairs[element] = set()
-                pairs[element].add(part)
+
+                self.components.append(component)
 
                 if match.groups()[0]:
                     floor = match.groups()[0]
 
                 if floor == 'first':
-                    floors[0].append(component)
+                    self.floors[0].append(component)
                 elif floor == 'second':
-                    floors[1].append(component)
+                    self.floors[1].append(component)
                 elif floor == 'third':
-                    floors[2].append(component)
+                    self.floors[2].append(component)
                 elif floor == 'fourth':
-                    floors[3].append(component)
+                    self.floors[3].append(component)
 
-        for k, v in pairs.items():
-            print '%s -> %s' % (k, v)
+    def get_initial_state(self):
+        return self.floors
 
+    def get_components(self):
+        return self.components
+
+class State(object):
+    def __init__(self, floors):
+        self.floors = floors
+
+    def is_valid(self):
         for floor in floors:
-            print floor
+            chips = [ chip.split('-')[0] for chip in floor if chip.endswith('-microchip') ]
+            generators = [ gen.split('-')[0] for gen in floor if gen.endswith('-generator') ]
+            for element in chips:
+                if element not in generators and len(generators) > 0:
+                    return False
 
+
+
+
+class Test(unittest.TestCase):
+    def test_parse(self):
+        lines = [
+'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
+'The second floor contains a hydrogen generator.',
+'The third floor contains a lithium generator.',
+'The fourth floor contains nothing relevant.',
+                ]
+        # lines = [
+# 'The first floor contains a promethium generator and a promethium-compatible microchip.',
+# 'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
+# 'The third floor contains a cobalt-compatible microchip, a curium-compatible microchip, a ruthenium-compatible microchip, and a plutonium-compatible microchip.',
+# 'The fourth floor contains nothing relevant.',
+        # ]
+
+        parser = InputParser(lines)
+        for floor in parser.get_initial_state():
+            print floor
 
     def test_part_two_examples(self):
         pass
