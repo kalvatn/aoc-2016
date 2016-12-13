@@ -2,10 +2,11 @@
 
 import unittest
 import time
+from collections import deque
 
 WALL='#'
 OPEN='.'
-STEP_INTERVAL_SECONDS = 0.1
+STEP_INTERVAL_SECONDS = 0.05
 
 class Node(object):
     def __init__(self, value, x, y, parent=None):
@@ -27,7 +28,7 @@ class Node(object):
         self.h_score = 0
 
     def get_move_cost(self, node):
-        return 0 if self.value == OPEN else 1
+        return 1
 
     def get_f_score(self):
         return self.g_score + self.h_score
@@ -42,6 +43,53 @@ class Node(object):
         return str(self)
 
 
+class BFS(object):
+    def __init__(self, table):
+        self.table = table
+        self.nodes = [ [ Node(table[x][y], x, y) for y in range(0, len(table)) ] for x in range(0, len(table)) ]
+        self.queue = []
+
+    def is_valid_point(self, point):
+        x, y = point
+        valid = x >= 0 and x < len(self.table) and y >= 0 and y < len(self.table) and self.nodes[x][y].value != WALL
+        print 'point %s valid : %s' % (point, valid)
+        return valid
+
+    def get_neighbours(self, node):
+        x, y = node.x, node.y
+        left = (x-1, y)
+        right = (x+1, y)
+        up = (x, y-1)
+        down = (x, y+1)
+        return [ self.nodes[point[0]][point[1]] for point in [ left, right, up, down ] if self.is_valid_point(point) ]
+
+    def search(self, start_point, goal_point, debug=False):
+        start = self.nodes[start_point[0]][start_point[1]]
+        goal = self.nodes[goal_point[1]][goal_point[0]]
+        print 'start %s' % start
+        print 'goal %s' % goal
+        visited = set()
+        self.queue.append(start)
+        steps = 0
+        while len(self.queue) > 0:
+            current = self.queue.pop(0)
+            visited.add((current.x, current.y))
+            if current == goal:
+                print "found"
+                break
+            for node in self.get_neighbours(current):
+                print node
+                visited.add((node.x, node.y))
+                self.queue.append(node)
+            steps += 1
+
+            if steps == 50:
+                print len(visited)
+
+
+
+
+
 class AStar(object):
     def __init__(self, table):
         self.table = table
@@ -51,7 +99,9 @@ class AStar(object):
 
     def is_valid_point(self, point):
         x, y = point
-        return x >= 0 and x < len(self.table) and y >= 0 and y < len(self.table) and self.nodes[x][y].value != WALL
+        valid = x >= 0 and x < len(self.table) and y >= 0 and y < len(self.table) and self.nodes[x][y].value != WALL
+        print 'point %s valid : %s' % (point, valid)
+        return valid
 
     def get_neighbours(self, node):
         x, y = node.x, node.y
@@ -62,9 +112,9 @@ class AStar(object):
         return [ self.nodes[point[0]][point[1]] for point in [ left, right, up, down ] if self.is_valid_point(point) ]
 
     def get_manhattan_distance(self, node, goal):
-        return abs(node.x - goal.x) + abs(node.y - node.x)
+        return abs(goal.x - node.x) + abs(goal.y - node.y)
 
-    def search(self, start_point, goal_point, step=False):
+    def search(self, start_point, goal_point, debug=False):
         start = self.nodes[start_point[0]][start_point[1]]
         goal = self.nodes[goal_point[1]][goal_point[0]]
         # print 'start : %s' % start
@@ -72,22 +122,37 @@ class AStar(object):
         current = start
         self.open.add(current)
         followed_path = []
+        visited = set()
+        visited.add((start.x, start.y))
+
+        steps = 0
         while self.open:
             current = min(self.open, key=lambda node: node.get_f_score())
-            if step:
-                followed_path.append((current.x, current.y))
-                print_map(self.table, followed_path)
-                time.sleep(STEP_INTERVAL_SECONDS)
+            # current = self.open.
+
+            print 'step %d, current : %s, visited : %d' % (steps, (current.x, current.y), len(visited) )
+            visited.add((current.x, current.y))
+            time.sleep(0.5)
+
             if current == goal:
                 path = []
                 while current.parent:
                     path.append((current.x, current.y))
                     current = current.parent
                 path.append((current.x, current.y))
-                return path[::-1]
+                path = path[::-1]
+
+                if debug:
+                    print_map(self.table, path)
+                return path
+
             self.open.remove(current)
             self.closed.add(current)
+
             for node in self.get_neighbours(current):
+                # print 'neigbour %s' % node
+                visited.add((node.x, node.y))
+                # print len(visited)
                 if node in self.closed:
                     continue
                 node.set_parent(current)
@@ -99,6 +164,15 @@ class AStar(object):
                     node.g_score = cost
                     node.h_score = self.get_manhattan_distance(node, goal)
                     self.open.add(node)
+
+            steps += 1
+            if steps == 50:
+                print 'visited after %d steps : %d' % (steps, len(visited))
+
+            if debug:
+                followed_path.append((current.x, current.y))
+                print_map(self.table, followed_path)
+                time.sleep(STEP_INTERVAL_SECONDS)
         raise ValueError('no valid path found')
 
 class Test(unittest.TestCase):
@@ -127,14 +201,18 @@ def get_map_value(x, y, magic_number):
 
 def print_map(table, path=[]):
     header = '  '
-    header += ''.join([ '%d' % x for x in range(0, len(table))])
+    i = 0
+    for x in range(0, len(table[0])):
+        i = 0 if x % 10 == 0 else i + 1
+        header += '%d' % i
+
     print header
     for x in range(0, len(table)):
-        row = '%d ' % (x)
+        row = '%2d ' % (x)
         for y in range(0, len(table[x])):
             if (x, y) in path:
                 CSI = "\x1B["
-                indicator = CSI + "31;40m" + 'P' + CSI + "0m"
+                indicator = CSI + "31;40m" + '.' + CSI + "0m"
                 if (x, y) == path[0]:
                     indicator = 'S'
 
@@ -149,7 +227,7 @@ def print_map(table, path=[]):
 
 def main(lines):
     width = 50
-    height = 50
+    height = 45
     # magic_number = 10
     magic_number = int(lines[0])
     table = [[get_map_value(x, y, magic_number) for x in range(0,width)] for y in range(0, height)]
@@ -158,12 +236,14 @@ def main(lines):
     astar = AStar(table)
     # path = astar.search((1, 1), (7,4))
     # path = astar.search((1, 1), (7,4), True)
-    path = astar.search((1, 1), (31,39), False)
+    # path = astar.search((1, 1), (31,39))
+    # path = astar.search((1, 1), (31,39), False)
+    bfs = BFS(table)
+    bfs.search((1,1), (31, 39))
 
     # subtract start and goal nodes
-    length = len(path) - 2 - 1
-    # print_map(table, path)
-    print 'part1 : %d' % (length)
+    # length = len(path) - 1
+    # print 'part1 : %d' % (length)
 
 
 if __name__ == '__main__':
