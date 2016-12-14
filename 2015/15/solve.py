@@ -38,15 +38,16 @@ def zero_if_negative(value):
 
 def get_optimal_spoon_distribution(ingredients, max_spoons):
     best = None
+    best_calories = None
     number_of_variables = len(ingredients)
     for combination in get_integer_combinations(number_of_variables, max_spoons):
         properties = {
             'capacity' : 0,
             'durability' : 0,
             'flavor' : 0,
-            'texture' : 0,
-            # 'calories' : 0
+            'texture' : 0
         }
+        calories = 0
         for i in range(0, number_of_variables):
             ingredient = ingredients[i]
             spoons = combination[i]
@@ -54,14 +55,17 @@ def get_optimal_spoon_distribution(ingredients, max_spoons):
             properties['durability'] += (ingredient.durability * spoons)
             properties['flavor'] += (ingredient.flavor * spoons)
             properties['texture'] += (ingredient.texture * spoons)
-            # properties['calories'] += (ingredient.calories * spoons)
+            calories += (ingredient.calories * spoons)
 
         factors = [ zero_if_negative(v) for v in properties.values() ]
         product = reduce(mul, factors, 1)
+        if calories == 500:
+            if best_calories is None or product > best_calories[0]:
+                best_calories = (product, combination)
+
         if best is None or product > best[0]:
             best = (product, combination)
-            print best
-    return best
+    return [ best, best_calories ]
 
 def main(lines):
     part1 = None
@@ -76,11 +80,10 @@ def main(lines):
     for ingredient in ingredients:
         print ingredient
 
-    part1 = get_optimal_spoon_distribution(ingredients, 100)
+    best_combo = get_optimal_spoon_distribution(ingredients, 100)
 
-
-    print 'part 1 : %d (%s)' % (part1[0], part1[1])
-    print 'part 2 : %s' % (part2)
+    print 'part 1 : %d (%s)' % (best_combo[0][0], best_combo[0][1])
+    print 'part 2 : %d (%s)' % (best_combo[1][0], best_combo[1][1])
 
 if __name__ == '__main__':
     # unittest.main()
