@@ -31,11 +31,11 @@ class Reindeer(object):
                 self.fly_counter += 1
                 self.total_distance += self.speed
             else:
-                self.rest_counter = self.rest_duration
-        print '%s fly : %d, rest : %d, distance : %d' % (self.name, self.fly_counter, self.rest_counter, self.total_distance)
+                self.rest_counter = self.rest_duration -1
+        # print '%s fly : %d, rest : %d, distance : %d' % (self.name, self.fly_counter, self.rest_counter, self.total_distance)
 
     def __str__(self):
-        return '%s %dkm/s for %d, rest %d' % (self.name, self.speed, self.fly_duration, self.rest_duration)
+        return '%s %dkm/s for %d, rest %d, total distance : %d' % (self.name, self.speed, self.fly_duration, self.rest_duration, self.total_distance)
 
 def main(lines):
     part1 = None
@@ -48,19 +48,32 @@ def main(lines):
         name, speed, fly_duration, rest_duration = match.groups()
         reindeers.append(Reindeer(name, int(speed), int(fly_duration), int(rest_duration)))
 
-    print reindeers
-    for i in range(0, 1000):
+
+    for reindeer in reindeers:
+        print reindeer
+    # for i in range(0, 138):
+    # for i in range(0, 1000):
+    for i in range(0, 2503):
         for reindeer in reindeers:
             reindeer.fly()
+        # reindeers[0].fly()
 
-    print 'part 1 : %s' % (part1)
+    best = (0, reindeers[0])
+    best_reindeer = reindeers[0]
+    for reindeer in reindeers:
+        if best[0] < reindeer.total_distance:
+            best = (reindeer.total_distance, best_reindeer)
+
+    part1 = best
+
+    print 'part 1 : %d (%s)' % (part1[0], part1[1])
     print 'part 2 : %s' % (part2)
 
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    # with open('input') as file:
-    with open('example_input') as file:
+    with open('input') as file:
+    # with open('example_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
