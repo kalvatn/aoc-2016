@@ -58,14 +58,37 @@ def main(lines):
     print 'part 2 : %s' % (part2)
 
 def part_one(persons):
+    from itertools import permutations
 
-    print persons
+    # print persons
+    best_sum = None
+    for perm in permutations(persons):
+        perm_sum = 0
+        for i in range(0, len(perm)):
+            l = i - 1
+            r = i + 1 if i + 1 < len(perm) else 0
+            left = perm[l]
+            current = perm[i]
+            right = perm[r]
+            if right.name in current.good:
+                perm_sum += current.good[right.name]
+            if right.name in current.bad:
+                perm_sum += current.bad[right.name]
+
+            if left.name in current.good:
+                perm_sum += current.good[left.name]
+            if left.name in current.bad:
+                perm_sum += current.bad[left.name]
+        best_sum = perm_sum if best_sum is None or best_sum < perm_sum else best_sum
+        if perm_sum > 0:
+            print '%s : %d' % (perm, perm_sum)
+    return best_sum
 
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    with open('input') as file:
-    # with open('example_input') as file:
+    # with open('input') as file:
+    with open('example_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
