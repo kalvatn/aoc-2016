@@ -56,8 +56,12 @@ class Test(unittest.TestCase):
         self.assertEquals(increment('b'), 'c')
         self.assertEquals(increment('z'), 'a')
 
-        self.assertEquals(increment('abc'), 'bcd')
-        self.assertEquals(increment('abz'), 'bcd')
+        self.assertEquals(increment('abc'), 'abd')
+        self.assertEquals(increment('abz'), 'aca')
+
+        self.assertEquals(increment('xx'), 'xy')
+        self.assertEquals(increment('xy'), 'xz')
+        self.assertEquals(increment('xz'), 'ya')
 
     @unittest.skip('skip find next')
     def test_find_next(self):
@@ -107,17 +111,19 @@ def increment_letter(letter):
     return letters[get_new_letter_index(letter)]
 
 def increment(password):
-    print password
     new_password = ''
     found_wrap = False
-    for letter in reversed(password):
+    reversed_password = ''.join(reversed(password))
+    for i in range(0, len(password)):
+        letter = reversed_password[i]
         new_letter = increment_letter(letter)
         new_password += new_letter
-
-        if found_wrap:
-            break
         if new_letter == 'a':
             found_wrap = True
+        else:
+            new_password += reversed_password[i+1:]
+            break
+
     return ''.join(reversed(new_password))
 
 
