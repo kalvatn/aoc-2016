@@ -20,6 +20,10 @@ class Reindeer(object):
 
         self.rest_counter = 0
         self.fly_counter = 0
+        self.points = 0
+
+    def give_point(self):
+        self.points += 1
 
     def fly(self):
         if self.rest_counter > 0:
@@ -35,7 +39,22 @@ class Reindeer(object):
         # print '%s fly : %d, rest : %d, distance : %d' % (self.name, self.fly_counter, self.rest_counter, self.total_distance)
 
     def __str__(self):
-        return '%s %dkm/s for %d, rest %d, total distance : %d' % (self.name, self.speed, self.fly_duration, self.rest_duration, self.total_distance)
+        return '%10s - %4d km, %4d points' % (self.name, self.total_distance, self.points)
+    def __repr__(self):
+        return self.name
+
+import operator
+
+def find_leading(reindeers):
+    ranking = [ (reindeer, reindeer.total_distance) for reindeer in reindeers ]
+    ranking = [ r for r in reversed(sorted(ranking, key=operator.itemgetter(1))) ]
+    best = [ranking[0]]
+    for tied in ranking[1:]:
+        if tied[1] == best[0][1]:
+            best.append(tied)
+    return best
+
+
 
 def main(lines):
     part1 = None
@@ -48,26 +67,28 @@ def main(lines):
         name, speed, fly_duration, rest_duration = match.groups()
         reindeers.append(Reindeer(name, int(speed), int(fly_duration), int(rest_duration)))
 
-
-    for reindeer in reindeers:
-        print reindeer
-    # for i in range(0, 138):
-    # for i in range(0, 1000):
     for i in range(0, 2503):
         for reindeer in reindeers:
             reindeer.fly()
-        # reindeers[0].fly()
+        for best in find_leading(reindeers):
+            best[0].give_point()
 
-    best = (0, reindeers[0])
-    best_reindeer = reindeers[0]
+    best_distance = (0, reindeers[0])
+    best_points = (0, reindeers[0])
     for reindeer in reindeers:
-        if best[0] < reindeer.total_distance:
-            best = (reindeer.total_distance, best_reindeer)
+        if best_distance[0] < reindeer.total_distance:
+            best_distance = (reindeer.total_distance, reindeer)
+        if best_points[0] < reindeer.points:
+            best_points = (reindeer.points, reindeer)
 
-    part1 = best
+    for reindeer in reindeers:
+        print reindeer
+
+    part1 = best_distance
+    part2 = best_points
 
     print 'part 1 : %d (%s)' % (part1[0], part1[1])
-    print 'part 2 : %s' % (part2)
+    print 'part 2 : %d (%s)' % (part2[0], part2[1])
 
 if __name__ == '__main__':
     # unittest.main()
