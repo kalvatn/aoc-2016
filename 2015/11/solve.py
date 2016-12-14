@@ -129,13 +129,13 @@ def increment(password):
 def find_next(password):
     password = increment(password)
     while not is_valid(password):
-        print password
+        # print password
         password = increment(password)
     return password
 
 def main(lines):
     part1 = find_next(lines[0])
-    part2 = None
+    part2 = find_next(part1)
 
     print 'part 1 : %s' % (part1)
     print 'part 2 : %s' % (part2)
