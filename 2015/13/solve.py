@@ -49,15 +49,24 @@ def main(lines):
             else:
                 persons[subject].add_negative(neighbour, int(weight) * -1)
 
+    part1 = find_best_arrangement(persons.values())
+    me = Person('Jon Terje')
+    for person in persons.values():
+        me.good[person.name] = 0
+        me.bad[person.name] = 0
+        person.good[me.name] = 0
+        person.bad[me.name] = 0
+
+    persons[me.name] = me
+
     for k, v in persons.items():
         print v
-
-    part1 = part_one(persons.values())
+    part2 = find_best_arrangement(persons.values())
 
     print 'part 1 : %s' % (part1)
     print 'part 2 : %s' % (part2)
 
-def part_one(persons):
+def find_best_arrangement(persons):
     from itertools import permutations
 
     # print persons
@@ -80,15 +89,15 @@ def part_one(persons):
             if left.name in current.bad:
                 perm_sum += current.bad[left.name]
         best_sum = perm_sum if best_sum is None or best_sum < perm_sum else best_sum
-        if perm_sum > 0:
-            print '%s : %d' % (perm, perm_sum)
+        # if perm_sum > 0:
+        #     print '%s : %d' % (perm, perm_sum)
     return best_sum
 
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    # with open('input') as file:
-    with open('example_input') as file:
+    with open('input') as file:
+    # with open('example_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
