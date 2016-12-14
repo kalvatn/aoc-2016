@@ -10,18 +10,20 @@ class Test(unittest.TestCase):
     def test_part_two_examples(self):
         pass
 
-def get_number_sum(data):
+def get_number_sum(data, ignore=None):
     number_sum = 0
     try:
         number_sum += int(data)
     except :
         if isinstance(data, list):
             for item in data:
-                # items.append(get_number_sum(item))
-                number_sum += get_number_sum(item)
+                number_sum += get_number_sum(item, ignore=ignore)
         elif isinstance(data, dict):
-            for k,v in data.items():
-                number_sum += get_number_sum(data[k])
+            if ignore and ignore in data.values():
+                # print 'ignoring red data %s' % data
+                pass
+            else:
+                number_sum += get_number_sum(data.values(), ignore=ignore)
         else:
             # print 'unknown data %s' % data
             pass
@@ -32,7 +34,7 @@ def main(lines):
 
     part1 = get_number_sum(json_data)
 
-    part2 = None
+    part2 = get_number_sum(json_data, 'red')
 
     print 'part 1 : %s' % (part1)
     print 'part 2 : %s' % (part2)
