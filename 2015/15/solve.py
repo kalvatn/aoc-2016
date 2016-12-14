@@ -44,7 +44,8 @@ def get_optimal_spoon_distribution(ingredients, max_spoons):
             'capacity' : 0,
             'durability' : 0,
             'flavor' : 0,
-            'texture' : 0
+            'texture' : 0,
+            # 'calories' : 0
         }
         for i in range(0, number_of_variables):
             ingredient = ingredients[i]
@@ -53,16 +54,14 @@ def get_optimal_spoon_distribution(ingredients, max_spoons):
             properties['durability'] += (ingredient.durability * spoons)
             properties['flavor'] += (ingredient.flavor * spoons)
             properties['texture'] += (ingredient.texture * spoons)
+            # properties['calories'] += (ingredient.calories * spoons)
 
         factors = [ zero_if_negative(v) for v in properties.values() ]
         product = reduce(mul, factors, 1)
         if best is None or product > best[0]:
             best = (product, combination)
+            print best
     return best
-
-
-
-
 
 def main(lines):
     part1 = None
@@ -86,8 +85,8 @@ def main(lines):
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    # with open('input') as file:
-    with open('example_input') as file:
+    with open('input') as file:
+    # with open('example_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
