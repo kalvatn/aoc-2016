@@ -14,21 +14,24 @@ class Test(unittest.TestCase):
 
 def get_combinations(container_sizes, liters):
     total = []
-    for i in range(2, 10):
+    i = 1
+    while True:
         combos = [ combination for combination in combinations(container_sizes, i) if sum(combination) == liters ]
+        if not combos and i > 10:
+            break
         for combo in combos:
-            print combo
             total.append(combo)
+        i += 1
     return total
 
 
 
 def main(lines):
-    container_sizes = [ 20, 15, 10, 5, 5 ]
-    part1 = len(get_combinations(container_sizes, 25))
+    # container_sizes = [ 20, 15, 10, 5, 5 ]
+    # part1 = len(get_combinations(container_sizes, 25))
 
-    # container_sizes = [ int(line) for line in lines ]
-    # part1 = len(get_combinations(container_sizes, 150))
+    container_sizes = [ int(line) for line in lines ]
+    part1 = len(get_combinations(container_sizes, 150))
     part2 = None
 
     print 'part 1 : %s' % (part1)
