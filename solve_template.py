@@ -9,9 +9,9 @@ import time
 # from itertools import combinations
 # import deque
 
+VERBOSE = False
 RUN_TESTS = False
 VISUALIZE = False
-QUIET = False
 
 def main():
     example_lines = get_input_lines(input_file='example_input')
@@ -22,11 +22,15 @@ def main():
     part2_example = None
     part2 = None
 
+    info('part 1')
+    info('example  : %s' % (part1_example))
+    info('solution : %s' % (part1))
 
-    print 'part 1 example : %s' % (part1_example)
-    print 'part 1 : %s' % (part1)
-    print 'part 2 example : %s' % (part2_example)
-    print 'part 2 : %s' % (part2)
+    print
+
+    info('part 2')
+    info('example  : %s' % (part2_example))
+    info('solution : %s' % (part2))
 
 class Test(unittest.TestCase):
     # @unittest.skip('skip')
@@ -37,17 +41,56 @@ def get_input_lines(input_file='input'):
     try:
         return [ line.strip() for line in open(input_file) ]
     except:
-        print 'could not read input file %s' % input_file
+        warn('could not read input file %s' % input_file)
         return []
 
+def debug(message):
+    if VERBOSE:
+        _print(message, color='green')
+
+def warn(message):
+    _print(message, color='yellow')
+
+def info(message):
+    print message
+
+def error(message):
+    _print(message, color='red')
+    sys.exit(1)
+
+def _print(message, color='default'):
+    if color == 'default':
+        print message
+    else:
+        _COLORS = {
+            'red' : '31m',
+            'green' : '32m',
+            'yellow' : '33m',
+            'blue' : '34m',
+            'magenta' : '35m',
+            'cyan' : '36m'
+        }
+        _CSI = "\x1B["
+        _RESET=_CSI+"0m"
+        if color in _COLORS:
+            print _CSI + _COLORS[color] + message + _RESET
+        else:
+            print message
+
+
+
 def process_args(args):
+    global RUN_TESTS
+    global VISUALIZE
+    global VERBOSE
     if args:
-        VISUALIZE = '-v' in args
-        QUIET = '-q' in args
-        RUN_TESTS = '-t' in args
+        VISUALIZE = '--visualize' in args
+        VERBOSE = '--verbose' in args or '-v' in args
+        RUN_TESTS = '--test' in args or '-t' in args
     if RUN_TESTS:
         args = []
         unittest.main(argv=[sys.argv[0]])
+    debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
 
 if __name__ == '__main__':
     process_args(sys.argv[1:])
