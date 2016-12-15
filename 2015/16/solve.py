@@ -20,6 +20,9 @@ class Aunt(object):
     def __str__(self):
         return 'Sue %d - %s' % (self.number, self.props)
 
+    def __repr__(self):
+        return str(self)
+
 
 def main(lines):
     target_props = {
@@ -36,7 +39,7 @@ def main(lines):
     }
     target = Aunt(UNKNOWN, target_props)
     pattern = re.compile(r'(?:Sue (\d+):)* (children|cats|samoyeds|pomeranians|akitas|vizslas|goldfish|trees|cars|perfumes): (\d+),?')
-    aunts = { }
+    aunts = []
     for line in lines:
         props = {
             'children' : UNKNOWN,
@@ -56,16 +59,31 @@ def main(lines):
             aunt_number, prop_type, prop_count = match.groups()
             if aunt_number is not None:
                 number = int(aunt_number)
-            props[prop_type] = prop_count
-        aunts[number] = Aunt(number, props)
+            props[prop_type] = int(prop_count)
+        aunts.append(Aunt(number, props))
 
-    for k, v in aunts.items():
-        print '%d - %s' % (k, v)
+    part1_candidates = []
+    filtered = []
+    for aunt in aunts:
+        is_candidate = False
+        for k, v in target_props.items():
+            if aunt.props[k] != UNKNOWN:
+                if aunt.props[k] != v:
+                    filtered.append(aunt)
+                    break
+                else:
+                    is_candidate = True
+            else:
+                is_candidate = True
+        if aunt not in filtered and is_candidate:
+            part1_candidates.append(aunt)
 
 
-    part1 = None
+
+    print part1_candidates
+    part1 = part1_candidates[0].number
     part2 = None
-    print 'part 1 : %s' % (part1)
+    print 'part 1 : %d' % (part1)
     print 'part 2 : %s' % (part2)
 
 if __name__ == '__main__':
