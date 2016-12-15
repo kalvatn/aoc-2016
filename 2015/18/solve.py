@@ -56,8 +56,8 @@ def main(lines):
 
 
 
-    max_steps = 5
-    sleep = 0.05
+    max_steps = 100
+    sleep = 0.1
     for i in range(0, max_steps):
         os.system('clear')
         print 'step %d' % i
@@ -78,8 +78,8 @@ def main(lines):
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    # with open('input') as file:
-    with open('example_input') as file:
+    with open('input') as file:
+    # with open('example_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
