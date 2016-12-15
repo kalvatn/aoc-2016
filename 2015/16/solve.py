@@ -69,6 +69,7 @@ def main(lines):
         for k, v in target_props.items():
             if aunt.props[k] != UNKNOWN:
                 if aunt.props[k] != v:
+                    # print '%d filtered due to %s mismatch (was %d, but should be == %d)' % (aunt.number, k, aunt.props[k], v)
                     filtered.append(aunt)
                     break
                 else:
@@ -80,10 +81,42 @@ def main(lines):
 
 
 
-    print part1_candidates
+
+    filtered = []
+    part2_candidates = []
+    greater_props = [ 'cats', 'trees' ]
+    fewer_props = [ 'pomeranians', 'goldfish' ]
+    for aunt in aunts:
+        is_candidate = False
+        for k, v in target_props.items():
+            if aunt.props[k] != UNKNOWN:
+                if (k in greater_props and aunt.props[k] <= v):
+                    # print '%d filtered due to %s mismatch (was %d, but should be < %d)' % (aunt.number, k, aunt.props[k], v)
+                    filtered.append(aunt)
+                    break
+                elif (k in fewer_props and aunt.props[k] >= v):
+                    # print '%d filtered due to %s mismatch (was %d, but should be < %d)' % (aunt.number, k, aunt.props[k], v)
+                    filtered.append(aunt)
+                    break
+                elif aunt.props[k] != v and k not in greater_props and k not in fewer_props:
+                    # print '%d filtered due to %s mismatch (was %d, but should be == %d)' % (aunt.number, k, aunt.props[k], v)
+                    filtered.append(aunt)
+                    break
+                else:
+                    is_candidate = True
+            else:
+                is_candidate = True
+        if aunt not in filtered and is_candidate:
+            part2_candidates.append(aunt)
+
+
+
+    # print part1_candidates
+    # print part2_candidates
     part1 = part1_candidates[0].number
-    part2 = None
     print 'part 1 : %d' % (part1)
+
+    part2 = part2_candidates[0].number
     print 'part 2 : %s' % (part2)
 
 if __name__ == '__main__':
