@@ -3,6 +3,8 @@
 import unittest
 import re
 
+import time
+
 
 class Disc(object):
     def __init__(self, number, positions, current):
@@ -10,8 +12,14 @@ class Disc(object):
         self.positions = positions
         self.current = current
 
+    def tick(self):
+        self.current += 1
+        if self.current % self.positions == 0:
+            self.current = 0
+
     def __str__(self):
-        return '%d - %d/%d' % (self.number, self.current, self.positions)
+        # return '%d - %d' % (self.number, self.current)
+        return '%d' % (self.current)
 
     def __repr__(self):
         return str(self)
@@ -25,10 +33,20 @@ def main(lines):
         number, positions, start = [ int (g) for g in match.groups() ]
         discs.append(Disc(number, positions, start))
 
+
     print discs
+    i = 0
+    while True:
+        if all(discs[t].current + t == discs[t].positions - 1 for t in range(0, len(discs))):
 
+            print '%2d : %s' % (i, discs)
+            part1 = i
+            break
 
-    part1 = None
+        for disc in discs:
+            disc.tick()
+        i += 1
+
     part2 = None
 
 
@@ -38,8 +56,9 @@ def main(lines):
 if __name__ == '__main__':
     # unittest.main()
     lines = []
-    # with open('input') as file:
-    with open('example_input') as file:
+    with open('input') as file:
+    # with open('example_input') as file:
+    # with open('custom_input') as file:
         for line in file:
             lines.append(line.strip())
     main(lines)
