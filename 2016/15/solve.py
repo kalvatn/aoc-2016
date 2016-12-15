@@ -34,6 +34,7 @@ def main(lines):
         discs.append(Disc(number, positions, start))
 
 
+    discs.append(Disc(number+1, 11, 0))
     print discs
     i = 0
     while True:
