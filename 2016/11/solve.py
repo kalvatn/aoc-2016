@@ -99,6 +99,25 @@ class StateGenerator(object):
 
 
 
+
+
+def main(lines):
+    print lines
+
+    puzzle_input = parse_lines(lines)
+
+    part1 = part_one(puzzle_input)
+    part2 = part_two(puzzle_input)
+
+    print 'part 1 : %s' % (part1)
+    print 'part 2 : %s' % (part2)
+
+def part_one(puzzle_input):
+    return ''
+
+def part_two(puzzle_input):
+    return ''
+
 class Test(unittest.TestCase):
     def setUp(self):
         self.lines = [
@@ -147,24 +166,6 @@ class Test(unittest.TestCase):
 
     def test_part_two_examples(self):
         pass
-
-def main(lines):
-    print lines
-
-    puzzle_input = parse_lines(lines)
-
-    part1 = part_one(puzzle_input)
-    part2 = part_two(puzzle_input)
-
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
-
-def part_one(puzzle_input):
-    return ''
-
-def part_two(puzzle_input):
-    return ''
-
 
 if __name__ == '__main__':
     unittest.main()
