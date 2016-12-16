@@ -54,19 +54,21 @@ class InputParser(object):
         return self.components
 
 class State(object):
-    def __init__(self, floors, current_floor):
+    def __init__(self, floors, floor_index):
         self._floors = floors
-        self._current_floor = current_floor
+        self._current_floor = floor_index
 
     @property
     def floors(self):
         return self._floors
 
     @property
-    def current_floor(self):
+    def floor_index(self):
         return self._current_floor
 
     def is_valid(self):
+        # if len(self.items) != sum(map(len, self.floors)):
+        #     return False
         for floor in self.floors:
             chips = [ chip.split('-')[0] for chip in floor if chip.endswith('-microchip') ]
             generators = [ gen.split('-')[0] for gen in floor if gen.endswith('-generator') ]
@@ -76,50 +78,62 @@ class State(object):
         return True
 
     def __str__(self):
-        return 'E%d %s' % (self.current_floor, [ floor for floor in self.floors ])
+        return 'E%d %s' % (self.floor_index, [ floor for floor in self.floors ])
 
     def __repr__(self):
         return str(self)
+
+    def print_to_stdout(self):
+        print
+        for i in range(0, len(self.floors)):
+            floor_indicator = 'E%d' % i if self.floor_index == i else str(i)
+            print '%2s - %s' % (floor_indicator, self.floors[i])
+        print
 
 class StateGenerator(object):
     def __init__(self, current):
         self.current = current
 
     def successors(self):
-        current_floor = self.current.current_floor
+        floor_index = self.current.floor_index
         floor_state = self.current.floors
-        current_floor_items = self.current.floors[current_floor]
+        floor_items = self.current.floors[floor_index]
 
         candidates = []
         for i in (1, -1):
-            next_floor = current_floor + i
-            if next_floor > len(floor_state) or next_floor < 0:
+            next_floor_index = floor_index + i
+            if next_floor_index > len(floor_state) or next_floor_index < 0:
                 continue
-            next_floor_items = floor_state[next_floor]
 
-            combine = current_floor_items + next_floor_items
-            debug('combine %s' % combine)
-            combine_size = len(combine)
+            next_floor_items = floor_state[next_floor_index]
+            # debug('%d -> %d' % (floor_index, next_floor_index))
+            # debug('current floor : %d (%s)' % (floor_index, floor_items))
+            # debug('next floor    : %d (%s)' % (next_floor_index, next_floor_items))
 
-            debug('%d -> %d' % (current_floor, next_floor))
-            for combo in self.get_combos(combine):
-                new_floor_state = floor_state
-                new_floor_state[current_floor] = [ str(item) for item in current_floor_items if item not in combo ]
-                new_floor_state[next_floor] = [ item for item in combo ]
-                # debug(new_floor_state)
-                new_state = State(new_floor_state, next_floor)
+
+            items = floor_items[:]
+            for combo in self.get_combos(items):
+                new_floor_items = [ item for item in floor_items if item not in combo ]
+                new_next_floor_items = [ item for item in combo ] + next_floor_items
+
+                new_floor_state = floor_state[:]
+                new_floor_state[floor_index] = new_floor_items
+                new_floor_state[next_floor_index] = new_next_floor_items
+                new_state = State(new_floor_state, next_floor_index)
                 if new_state.is_valid():
-                    # debug(new_state)
+                    # debug('combo : %s' % list(combo))
+                    # debug('old floor state : %s' % floor_state)
+                    # debug('new floor state : %s' % new_floor_state)
                     candidates.append(new_state)
-
-
-        return set(candidates)
+        return candidates
 
     def get_combos(self, items):
         combos = []
-        for combo in [ c for c in combinations(items, i) for i in range(1, len(items) + 1)] :
-            combos.append(''.join(combo))
-        return set(combos)
+        for i in range(1, 3):
+            for combo in combinations(items, i):
+                if combo not in combos:
+                    combos.append(combo)
+        return combos
 
 
 
@@ -181,11 +195,16 @@ class Test(unittest.TestCase):
         self.assertTrue(State(InputParser(self.lines).get_initial_state(), 0).is_valid())
 
     def test_state_generator(self):
-        floors = [['x-generator', 'z-generator'], ['z-microchip', 'x-microchip'], [], []]
+        floors = [['x-generator'], ['z-microchip', 'x-microchip'], [], []]
         state = State(floors, 1)
         successors = StateGenerator(state).successors()
+
+        print 'current'
+        state.print_to_stdout()
+
+        print 'possible'
         for successor in successors:
-            debug(successor)
+            successor.print_to_stdout()
 
 
 
