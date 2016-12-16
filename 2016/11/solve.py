@@ -85,7 +85,7 @@ class State(object):
         return 'E%d %s' % (self.floor_index, [ floor for floor in self.floors ])
 
     def __repr__(self):
-        return str(self)
+        return 'State %d %s' % (self.floor_index, self.floors)
 
     def print_to_stdout(self):
         print
@@ -110,20 +110,53 @@ class StateGenerator(object):
         floor_state = self.current.floors
         floor_items = self.current.floors[floor_index]
 
-        candidates = []
+        candidates = set()
+
+
+        bottom_floor_with_items = 0
+        for i in range(0, len(floor_state)):
+            if len(floor_state[i]) > 0:
+                bottom_floor_with_items = i
+                break
+
+        going_up = False
+
         for i in (1, -1):
             next_floor_index = floor_index + i
-            if next_floor_index >= len(floor_state) or next_floor_index < 0:
+            if next_floor_index >= len(floor_state) or next_floor_index < bottom_floor_with_items:
                 continue
+
+            if next_floor_index > floor_index:
+                going_up = True
 
             next_floor_items = floor_state[next_floor_index]
             # debug('%d -> %d' % (floor_index, next_floor_index))
             # debug('current floor : %d (%s)' % (floor_index, floor_items))
             # debug('next floor    : %d (%s)' % (next_floor_index, next_floor_items))
 
-
+            # print floor_items
             items = floor_items[:]
-            for combo in self.get_combos(items):
+            combos = self.get_combos(items)
+            pairs = []
+            elements = {
+            }
+            for item in items:
+                element, component = item.split('-')
+                if element not in elements:
+                    elements[element] = []
+                elements[element].append(item)
+            for k, v in elements.items():
+                if len(v) == 2:
+                    pairs.append( (v[0], v[1]))
+
+            if pairs and going_up:
+                combos = pairs
+            if len(items) == 2 and floor_index != 3:
+                if items[0].split('-')[0] == items[1].split('-')[0]:
+                    combos = [ (items[0], items[1]) ]
+            print combos
+
+            for combo in combos:
                 new_floor_items = [ item for item in floor_items if item not in combo ]
                 new_next_floor_items = [ item for item in combo ] + next_floor_items
 
@@ -135,7 +168,7 @@ class StateGenerator(object):
                     # debug('combo : %s' % list(combo))
                     # debug('old floor state : %s' % floor_state)
                     # debug('new floor state : %s' % new_floor_state)
-                    candidates.append(new_state)
+                    candidates.add(new_state)
         return candidates
 
     def get_combos(self, items):
@@ -148,32 +181,36 @@ class StateGenerator(object):
 
 
 def bfs(start, goal):
-    visited = set([start])
+    visited = set()
     frontier = set([start])
     steps = 0
 
     all_items = set([ item for floor in goal.floors for item in floor ])
     current = start
     path = []
-    while goal not in frontier:
+    while len(frontier) > 0:
         new_frontier = set()
+
         for state in frontier:
+            visited.add(state)
             if state.items_on_floor_four() == all_items:
                 print 'found goal'
-                while state.parent:
-                    path.append(state.parent)
-                    state = state.parent
+                current = state
+                path.append(current)
+                while current.parent:
+                    path.append(current.parent)
+                    current = current.parent
                 path = path[::-1]
                 return path
-            else:
-                for successor in StateGenerator(state).successors():
-                    successor.parent = state
-                    visited.add(successor)
+            successors = StateGenerator(state).successors()
+
+            for successor in successors:
+                successor.parent = state
+                if successor not in visited:
                     new_frontier.add(successor)
-                    # successor.print_to_stdout()
         frontier = new_frontier
         steps += 1
-        time.sleep(1)
+        debug('steps : %d frontier %d' % (steps, len(frontier)))
     return path
 
 
@@ -190,19 +227,28 @@ def main():
     info('goal state')
     goal_state.print_to_stdout()
     path = bfs(initial_state, goal_state)
+    part1_example = len(path)
     print 'found in %d steps : %s' % (len(path), path)
     for path in path:
         print path
 
-    part1_example = None
-    part1 = None
+    initial_state = State(InputParser(lines).get_initial_state(), 0)
+    all_items = set([ item for floor in initial_state.floors for item in floor ])
+    goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
+
+    path = bfs(initial_state, goal_state)
+
+    print 'found in %d steps : %s' % (len(path), path)
+    for path in path:
+        print path
+    part1 = len(path)
 
     part2_example = None
     part2 = None
 
     info('part 1')
-    info('example  : %s' % (part1_example))
-    info('solution : %s' % (part1))
+    info('example  : %d' % (part1_example))
+    info('solution : %d' % (part1))
 
     print
 
@@ -256,8 +302,14 @@ class Test(unittest.TestCase):
         initial_state.print_to_stdout()
 
         print 'possible'
+
         for successor in successors:
             successor.print_to_stdout()
+        if len(successors) == 1:
+            for successor in successors:
+                for x in StateGenerator(successor).successors():
+                    successor.print_to_stdout()
+                break
 
         all_items = set([ item for floor in initial_state.floors for item in floor ])
         print 'all items : %s' % all_items
