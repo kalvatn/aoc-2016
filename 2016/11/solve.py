@@ -13,7 +13,7 @@ from itertools import permutations
 # from itertools import combinations
 # import deque
 
-VERBOSE = False
+VERBOSE = True
 RUN_TESTS = False
 VISUALIZE = False
 
@@ -113,6 +113,7 @@ class StateGenerator(object):
 
 
 
+
 def main():
     example_lines = get_input_lines(input_file='example_input')
     lines = get_input_lines()
@@ -135,48 +136,48 @@ def main():
 
 class Test(unittest.TestCase):
     def setUp(self):
-        self.lines = [
-'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
-'The second floor contains a hydrogen generator.',
-'The third floor contains a lithium generator.',
-'The fourth floor contains nothing relevant.',
-                ]
-
-        # self.lines = [
-# 'The first floor contains a hydrogen-compatible microchip and a lithium microchip.',
-# 'The second floor contains a hydrogen generator.',
-# 'The third floor contains a lithium generator.',
-# 'The fourth floor contains nothing relevant.',
-        #         ]
-
-        # self.lines = [
-# 'The first floor contains a promethium generator and a promethium-compatible microchip.',
-# 'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
-# 'The third floor contains a cobalt-compatible microchip, a curium-compatible microchip, a ruthenium-compatible microchip, and a plutonium-compatible microchip.',
-# 'The fourth floor contains nothing relevant.',
-        # ]
+        self.example_lines = get_input_lines(input_file='example_input')
+        self.lines = get_input_lines()
 
     def test_parse(self):
-        parser = InputParser(self.lines)
-        for floor in parser.get_initial_state():
-            print floor
+        floors = InputParser(self.example_lines).get_initial_state()
+        self.assertEquals(floors[0], ['hydrogen-microchip', 'lithium-microchip'])
+        self.assertEquals(floors[1], ['hydrogen-generator'])
+        self.assertEquals(floors[2], ['lithium-generator'])
+        self.assertEquals(floors[3], [])
 
-    def test_state(self):
         floors = InputParser(self.lines).get_initial_state()
-        state = State(floors, 0)
-        print state.is_valid()
+        self.assertEquals(floors[0], ['promethium-generator', 'promethium-microchip'])
+        self.assertEquals(floors[1], ['cobalt-generator', 'curium-generator', 'ruthenium-generator', 'plutonium-generator'])
+        self.assertEquals(floors[2], ['cobalt-microchip', 'curium-microchip', 'ruthenium-microchip', 'plutonium-microchip'])
+        self.assertEquals(floors[3], [])
+
+    def test_state_invalid_mixed_unconnected(self):
+        self.assertFalse(State([['promethium-generator', 'cobalt-microchip'], [], [], []], 0).is_valid())
+        self.assertFalse(State([['promethium-generator', 'promethium-microchip', 'cobalt-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_connected(self):
+        self.assertTrue(State([['promethium-generator', 'promethium-microchip', 'cobalt-generator', 'cobalt-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_no_generators(self):
+        self.assertTrue(State([['promethium-microchip', 'cobalt-microchip'], [], [], []], 0).is_valid())
+        self.assertTrue(State([['promethium-microchip', 'cobalt-microchip', 'whatever-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_generators(self):
+        self.assertTrue(State([['promethium-generator', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
+        self.assertTrue(State([['promethium-generator', 'promethium-microchip', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
+
+
+    def test_state_is_valid_for_inputs(self):
+        self.assertTrue(State(InputParser(self.example_lines).get_initial_state(), 0).is_valid())
+        self.assertTrue(State(InputParser(self.lines).get_initial_state(), 0).is_valid())
+
 
     def test_state_generator(self):
-        floors = InputParser(self.lines).get_initial_state()
+        floors = InputParser(self.example_lines).get_initial_state()
         state = State(floors, 0)
         gen = StateGenerator(state)
         gen.generate_successors()
-        i = 0
-        for state in gen.successors:
-            print i
-            for floor in state.floors:
-                print floor
-            i += 1
 
 
     def test_part_two_examples(self):
@@ -234,8 +235,9 @@ def process_args(args):
         VERBOSE = '--verbose' in args or '-v' in args
         RUN_TESTS = '--test' in args or '-t' in args
     if RUN_TESTS:
-        args = []
-        unittest.main(argv=[sys.argv[0]])
+        args = [ '-v' ]
+        VERBOSE = True
+        unittest.main(argv=[sys.argv[0]] + args)
     debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
 
 if __name__ == '__main__':
