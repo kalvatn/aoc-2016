@@ -55,6 +55,7 @@ class InputParser(object):
 
 class State(object):
     def __init__(self, floors, floor_index):
+        self.parent = None
         self._floors = floors
         self._current_floor = floor_index
 
@@ -94,7 +95,7 @@ class State(object):
         print
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return hash(self) == hash(other)
 
     def __hash__(self):
         return hash(self.__repr__())
@@ -112,7 +113,7 @@ class StateGenerator(object):
         candidates = []
         for i in (1, -1):
             next_floor_index = floor_index + i
-            if next_floor_index > len(floor_state) or next_floor_index < 0:
+            if next_floor_index >= len(floor_state) or next_floor_index < 0:
                 continue
 
             next_floor_items = floor_state[next_floor_index]
@@ -146,10 +147,53 @@ class StateGenerator(object):
         return combos
 
 
+def bfs(start, goal):
+    visited = set([start])
+    frontier = set([start])
+    steps = 0
+
+    all_items = set([ item for floor in goal.floors for item in floor ])
+    current = start
+    path = []
+    while goal not in frontier:
+        new_frontier = set()
+        for state in frontier:
+            if state.items_on_floor_four() == all_items:
+                print 'found goal'
+                while state.parent:
+                    path.append(state.parent)
+                    state = state.parent
+                path = path[::-1]
+                return path
+            else:
+                for successor in StateGenerator(state).successors():
+                    successor.parent = state
+                    visited.add(successor)
+                    new_frontier.add(successor)
+                    # successor.print_to_stdout()
+        frontier = new_frontier
+        steps += 1
+        time.sleep(1)
+    return path
+
+
 
 def main():
     example_lines = get_input_lines(input_file='example_input')
     lines = get_input_lines()
+    initial_state = State(InputParser(example_lines).get_initial_state(), 0)
+    all_items = set([ item for floor in initial_state.floors for item in floor ])
+    goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
+
+    info('initial state')
+    initial_state.print_to_stdout()
+    info('goal state')
+    goal_state.print_to_stdout()
+    path = bfs(initial_state, goal_state)
+    print 'found in %d steps : %s' % (len(path), path)
+    for path in path:
+        print path
+
     part1_example = None
     part1 = None
 
@@ -228,7 +272,6 @@ class Test(unittest.TestCase):
         s2 = State([['x-generator'], [], [], []], 0)
         self.assertEquals(s1, s2)
 
-
         seen = set()
         seen.add(s1)
         seen.add(s2)
@@ -243,12 +286,6 @@ class Test(unittest.TestCase):
         seen.add( State([['x-generator'], [], [], []], 2))
         seen.add( State([['x-generator'], [], [], []], 3))
         self.assertEquals(len(seen), 4)
-
-
-
-    def test_part_two_examples(self):
-        pass
-
 
 def get_input_lines(input_file='input'):
     try:
