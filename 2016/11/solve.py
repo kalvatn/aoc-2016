@@ -3,7 +3,19 @@
 
 import re
 import unittest
-import itertools
+
+import unittest
+import sys
+import os
+import time
+from itertools import permutations
+# from itertools import combinations_with_replacement
+# from itertools import combinations
+# import deque
+
+VERBOSE = False
+RUN_TESTS = False
+VISUALIZE = False
 
 
 class InputParser(object):
@@ -86,13 +98,13 @@ class StateGenerator(object):
         if can_go_up:
             floors = [ [], [], [], [] ]
             for i in range(current_floor, len(current_floors) - 1):
-                candidates = [ State(x, i) for x in itertools.permutations(current_floors) ]
+                candidates = [ State(x, i) for x in permutations(current_floors) ]
                 states += [ state for state in candidates if state.is_valid() ]
 
         if can_go_down:
             floors = [ [], [], [], [] ]
             for i in range(current_floor, 0, -1):
-                candidates = [ State(x, i) for x in itertools.permutations(current_floors) ]
+                candidates = [ State(x, i) for x in permutations(current_floors) ]
                 states += [ state for state in candidates if state.is_valid() ]
 
         self._successors = states
@@ -101,22 +113,25 @@ class StateGenerator(object):
 
 
 
-def main(lines):
-    print lines
+def main():
+    example_lines = get_input_lines(input_file='example_input')
+    lines = get_input_lines()
+    part1_example = None
+    part1 = None
 
-    puzzle_input = parse_lines(lines)
+    part2_example = None
+    part2 = None
 
-    part1 = part_one(puzzle_input)
-    part2 = part_two(puzzle_input)
+    info('part 1')
+    info('example  : %s' % (part1_example))
+    info('solution : %s' % (part1))
 
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
+    print
 
-def part_one(puzzle_input):
-    return ''
+    info('part 2')
+    info('example  : %s' % (part2_example))
+    info('solution : %s' % (part2))
 
-def part_two(puzzle_input):
-    return ''
 
 class Test(unittest.TestCase):
     def setUp(self):
@@ -167,10 +182,65 @@ class Test(unittest.TestCase):
     def test_part_two_examples(self):
         pass
 
+
+def get_input_lines(input_file='input'):
+    try:
+        return [ line.strip() for line in open(input_file) ]
+    except:
+        warn('could not read input file %s' % input_file)
+        return []
+
+def debug(message):
+    if VERBOSE:
+        _print(message, color='green')
+
+def warn(message):
+    _print(message, color='yellow')
+
+def info(message):
+    print message
+
+def error(message):
+    _print(message, color='red')
+    sys.exit(1)
+
+def _print(message, color='default'):
+    if color == 'default':
+        print message
+    else:
+        _COLORS = {
+            'red' : '31m',
+            'green' : '32m',
+            'yellow' : '33m',
+            'blue' : '34m',
+            'magenta' : '35m',
+            'cyan' : '36m'
+        }
+        _CSI = "\x1B["
+        _RESET=_CSI+"0m"
+        if color in _COLORS:
+            print _CSI + _COLORS[color] + message + _RESET
+        else:
+            print message
+
+
+
+def process_args(args):
+    global RUN_TESTS
+    global VISUALIZE
+    global VERBOSE
+    if args:
+        VISUALIZE = '--visualize' in args
+        VERBOSE = '--verbose' in args or '-v' in args
+        RUN_TESTS = '--test' in args or '-t' in args
+    if RUN_TESTS:
+        args = []
+        unittest.main(argv=[sys.argv[0]])
+    debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
+
 if __name__ == '__main__':
-    unittest.main()
-    lines = []
-    with open('input') as file:
-        for line in file:
-            lines.append(line.strip())
-    main(lines)
+    process_args(sys.argv[1:])
+    main()
+else:
+    process_args(sys.argv[1:])
+    main()
