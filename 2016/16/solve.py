@@ -9,19 +9,53 @@ import time
 # from itertools import combinations
 # import deque
 
-VERBOSE = True
+VERBOSE = False
 RUN_TESTS = False
 VISUALIZE = True
 
+def invert(a):
+    if len(a) == 1:
+        return '1' if a == '0' else '0'
+    return ''.join([invert(b) for b in a])
+
+
+def dragon(a):
+    b = ''.join(reversed([invert(c) for c in a]))
+    return a + '0' + b
+
+def checksum(a):
+    c = ''
+    for i in range(0, len(a)-1, 2):
+        # debug('a1 a1+1 : ' + a[i] + a[i+1])
+        if a[i] == a[i+1]:
+            c += '1'
+        else:
+            c += '0'
+        # debug('c : ' + c)
+    return c if len(c) % 2 != 0 else checksum(c)
+
+def truncate(state, length):
+    if len(state) < length:
+        raise ValueError('len(%s) < length (%d)' % (state, length))
+
+    return state[0:length]
+
+def get_disk_data(state, length):
+
+    debug(state)
+    while len(state) < length:
+        state = dragon(state)
+        debug(state)
+    return truncate(state, length)
+
 def main():
     example_lines = get_input_lines(input_file='example_input')
-    # lines = get_input_lines()
+    lines = get_input_lines()
 
-    part1_example = None
-    part1 = None
+    part1_example = checksum(get_disk_data(example_lines[0], 20),)
+    part1 = checksum(get_disk_data(lines[0], 272))
 
-    part2_example = None
-    part2 = None
+    part2 = checksum(get_disk_data(lines[0], 35651584))
 
     info('part 1')
     info('example  : %s' % (part1_example))
@@ -30,13 +64,30 @@ def main():
     print
 
     info('part 2')
-    info('example  : %s' % (part2_example))
     info('solution : %s' % (part2))
 
 class Test(unittest.TestCase):
-    # @unittest.skip('skip')
-    def test(self):
-        self.assertTrue(True)
+    def test_dragon(self):
+        self.assertEquals(dragon('1'), '100')
+        self.assertEquals(dragon('0'), '001')
+        self.assertEquals(dragon('11111'), '11111000000')
+        self.assertEquals(dragon('111100001010'), '1111000010100101011110000')
+
+
+    def test_checksum(self):
+        self.assertEquals(checksum('110010110100'), '100')
+
+
+    def test_truncate(self):
+        self.assertEquals(truncate('100', 1), '1')
+        self.assertEquals(truncate('101010', 3), '101')
+        self.assertEquals(truncate('000111000', 4), '0001')
+        self.assertEquals(truncate('111111110', 5), '11111')
+        self.assertEquals(len(truncate('10000011110010000111110', 20)), 20)
+        self.assertEquals(truncate('10000011110010000111110', 20), '10000011110010000111')
+
+    def test_get_disk_data(self):
+        self.assertEquals(get_disk_data('10000', 20), '10000011110010000111')
 
 def get_input_lines(input_file='input'):
     try:
@@ -89,6 +140,7 @@ def process_args(args):
         VERBOSE = '--verbose' in args or '-v' in args
         RUN_TESTS = '--test' in args or '-t' in args
     if RUN_TESTS:
+        VERBOSE = True
         args = []
         unittest.main(argv=[sys.argv[0]])
     debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
