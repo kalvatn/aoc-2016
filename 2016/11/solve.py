@@ -66,6 +66,9 @@ class State(object):
     def floor_index(self):
         return self._current_floor
 
+    def items_on_floor_four(self):
+        return set([ item for item in self.floors[3] ])
+
     def is_valid(self):
         # if len(self.items) != sum(map(len, self.floors)):
         #     return False
@@ -89,6 +92,13 @@ class State(object):
             floor_indicator = 'E%d' % i if self.floor_index == i else str(i)
             print '%2s - %s' % (floor_indicator, self.floors[i])
         print
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
 
 class StateGenerator(object):
     def __init__(self, current):
@@ -195,16 +205,44 @@ class Test(unittest.TestCase):
         self.assertTrue(State(InputParser(self.lines).get_initial_state(), 0).is_valid())
 
     def test_state_generator(self):
-        floors = [['x-generator'], ['z-microchip', 'x-microchip'], [], []]
-        state = State(floors, 1)
-        successors = StateGenerator(state).successors()
+        initial_state = State(InputParser(self.example_lines).get_initial_state(), 0)
+        successors = StateGenerator(initial_state).successors()
 
         print 'current'
-        state.print_to_stdout()
+        initial_state.print_to_stdout()
 
         print 'possible'
         for successor in successors:
             successor.print_to_stdout()
+
+        all_items = set([ item for floor in initial_state.floors for item in floor ])
+        print 'all items : %s' % all_items
+        self.assertNotEquals(initial_state.items_on_floor_four(), all_items)
+
+    def test_state_equality(self):
+        s1 = State([[], [], [], []], 0)
+        s2 = State([[], [], [], []], 0)
+        self.assertEquals(s1, s2)
+
+        s1 = State([['x-generator'], [], [], []], 0)
+        s2 = State([['x-generator'], [], [], []], 0)
+        self.assertEquals(s1, s2)
+
+
+        seen = set()
+        seen.add(s1)
+        seen.add(s2)
+
+        self.assertEquals(len(seen), 1)
+        s3 = State([['x-generator'], [], [], []], 1)
+        seen.add(s3)
+        self.assertEquals(len(seen), 2)
+        seen.add( State([['x-generator'], [], [], []], 1))
+        self.assertEquals(len(seen), 2)
+
+        seen.add( State([['x-generator'], [], [], []], 2))
+        seen.add( State([['x-generator'], [], [], []], 3))
+        self.assertEquals(len(seen), 4)
 
 
 
