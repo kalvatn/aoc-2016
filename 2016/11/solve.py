@@ -8,9 +8,9 @@ import unittest
 import sys
 import os
 import time
-from itertools import permutations
+# from itertools import permutations
 # from itertools import combinations_with_replacement
-# from itertools import combinations
+from itertools import combinations
 # import deque
 
 VERBOSE = True
@@ -75,42 +75,51 @@ class State(object):
                     return False
         return True
 
+    def __str__(self):
+        return 'E%d %s' % (self.current_floor, [ floor for floor in self.floors ])
+
+    def __repr__(self):
+        return str(self)
+
 class StateGenerator(object):
     def __init__(self, current):
-        self._current = current
-        self._successors = []
+        self.current = current
 
-    @property
-    def current(self):
-        return self._current
-
-    @property
     def successors(self):
-        return self._successors
-
-    def generate_successors(self):
-        states = []
         current_floor = self.current.current_floor
-        current_floors = self.current.floors
-        can_go_down = current_floor > 0
-        can_go_up = current_floor < 3
+        floor_state = self.current.floors
+        current_floor_items = self.current.floors[current_floor]
 
-        if can_go_up:
-            floors = [ [], [], [], [] ]
-            for i in range(current_floor, len(current_floors) - 1):
-                candidates = [ State(x, i) for x in permutations(current_floors) ]
-                states += [ state for state in candidates if state.is_valid() ]
+        candidates = []
+        for i in (1, -1):
+            next_floor = current_floor + i
+            if next_floor > len(floor_state) or next_floor < 0:
+                continue
+            next_floor_items = floor_state[next_floor]
 
-        if can_go_down:
-            floors = [ [], [], [], [] ]
-            for i in range(current_floor, 0, -1):
-                candidates = [ State(x, i) for x in permutations(current_floors) ]
-                states += [ state for state in candidates if state.is_valid() ]
+            combine = current_floor_items + next_floor_items
+            debug('combine %s' % combine)
+            combine_size = len(combine)
 
-        self._successors = states
+            debug('%d -> %d' % (current_floor, next_floor))
+            for combo in self.get_combos(combine):
+                new_floor_state = floor_state
+                new_floor_state[current_floor] = [ str(item) for item in current_floor_items if item not in combo ]
+                new_floor_state[next_floor] = [ item for item in combo ]
+                # debug(new_floor_state)
+                new_state = State(new_floor_state, next_floor)
+                if new_state.is_valid():
+                    # debug(new_state)
+                    candidates.append(new_state)
 
 
+        return set(candidates)
 
+    def get_combos(self, items):
+        combos = []
+        for combo in [ c for c in combinations(items, i) for i in range(1, len(items) + 1)] :
+            combos.append(''.join(combo))
+        return set(combos)
 
 
 
@@ -167,17 +176,17 @@ class Test(unittest.TestCase):
         self.assertTrue(State([['promethium-generator', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
         self.assertTrue(State([['promethium-generator', 'promethium-microchip', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
 
-
     def test_state_is_valid_for_inputs(self):
         self.assertTrue(State(InputParser(self.example_lines).get_initial_state(), 0).is_valid())
         self.assertTrue(State(InputParser(self.lines).get_initial_state(), 0).is_valid())
 
-
     def test_state_generator(self):
-        floors = InputParser(self.example_lines).get_initial_state()
-        state = State(floors, 0)
-        gen = StateGenerator(state)
-        gen.generate_successors()
+        floors = [['x-generator', 'z-generator'], ['z-microchip', 'x-microchip'], [], []]
+        state = State(floors, 1)
+        successors = StateGenerator(state).successors()
+        for successor in successors:
+            debug(successor)
+
 
 
     def test_part_two_examples(self):
@@ -191,9 +200,9 @@ def get_input_lines(input_file='input'):
         warn('could not read input file %s' % input_file)
         return []
 
-def debug(message):
+def debug(thing):
     if VERBOSE:
-        _print(message, color='green')
+        _print(str(thing), color='green')
 
 def warn(message):
     _print(message, color='yellow')
