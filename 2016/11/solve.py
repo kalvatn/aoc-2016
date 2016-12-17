@@ -59,6 +59,19 @@ class State(object):
         self._floors = floors
         self._current_floor = floor_index
 
+        self.h_score = 0
+        self.g_score = float('inf')
+
+    def move_cost(self):
+        return 1
+
+    def heuristic(self):
+        return len(self.floors) - self.floor_index + len(self.items_on_floor_four())
+
+    @property
+    def f_score(self):
+        return self.h_score + self.g_score
+
     @property
     def floors(self):
         return self._floors
@@ -136,25 +149,23 @@ class StateGenerator(object):
 
             # print floor_items
             items = floor_items[:]
-            combos = self.get_combos(items)
-            pairs = []
-            elements = {
-            }
-            for item in items:
-                element, component = item.split('-')
-                if element not in elements:
-                    elements[element] = []
-                elements[element].append(item)
-            for k, v in elements.items():
-                if len(v) == 2:
-                    pairs.append( (v[0], v[1]))
+            combos = list(combinations(items, 1)) + list(combinations(items, 2))
+            # pairs = []
+            # elements = {
+            # }
+            # for item in items:
+            #     element, component = item.split('-')
+            #     if element not in elements:
+            #         elements[element] = []
+            #     elements[element].append(item)
+            # for k, v in elements.items():
+            #     if len(v) == 2:
+            #         pairs.append( (v[0], v[1]))
 
-            if pairs and going_up:
-                combos = pairs
-            if len(items) == 2 and floor_index != 3:
-                if items[0].split('-')[0] == items[1].split('-')[0]:
-                    combos = [ (items[0], items[1]) ]
-            print combos
+            # if pairs and next_floor_index == 3:
+            #     combos = pairs
+            # if len(items) % 2 == 0 and len(pairs) == 2 and floor_index != 3:
+            #     combos = pairs
 
             for combo in combos:
                 new_floor_items = [ item for item in floor_items if item not in combo ]
@@ -171,15 +182,6 @@ class StateGenerator(object):
                     candidates.add(new_state)
         return candidates
 
-    def get_combos(self, items):
-        combos = []
-        for i in range(1, 3):
-            for combo in combinations(items, i):
-                if combo not in combos:
-                    combos.append(combo)
-        return combos
-
-
 def bfs(start, goal):
     visited = set()
     frontier = set([start])
@@ -187,7 +189,6 @@ def bfs(start, goal):
 
     all_items = set([ item for floor in goal.floors for item in floor ])
     current = start
-    path = []
     while len(frontier) > 0:
         new_frontier = set()
 
@@ -196,12 +197,12 @@ def bfs(start, goal):
             if state.items_on_floor_four() == all_items:
                 print 'found goal'
                 current = state
+                path = []
                 path.append(current)
-                while current.parent:
+                while current.parent and current.parent != start:
                     path.append(current.parent)
                     current = current.parent
-                path = path[::-1]
-                return path
+                return path[::-1]
             successors = StateGenerator(state).successors()
 
             for successor in successors:
@@ -211,7 +212,44 @@ def bfs(start, goal):
         frontier = new_frontier
         steps += 1
         debug('steps : %d frontier %d' % (steps, len(frontier)))
-    return path
+    raise ValueError('could not find path')
+
+def astar(start, goal):
+    fringe = set([start])
+    closed = set()
+    visited = set()
+
+    all_items = set([ item for floor in goal.floors for item in floor ])
+
+    while fringe:
+        current = min(fringe, key=lambda state: state.f_score)
+
+        visited.add(current)
+
+        if current.items_on_floor_four() == all_items:
+            path = []
+            while current.parent and current.parent != start:
+                path.append(current.parent)
+                current = current.parent
+            return path[::-1]
+        fringe.remove(current)
+        closed.add(current)
+        for state in StateGenerator(current).successors():
+            visited.add(state)
+            if state in closed:
+                continue
+            state.parent = current
+            cost = current.g_score + 1
+            if state in fringe:
+                if state.g_score > cost:
+                    state.g_score = cost
+            else:
+                state.g_score = state.move_cost()
+                state.h_score = state.heuristic()
+                fringe.add(state)
+
+
+
 
 
 
@@ -226,9 +264,15 @@ def main():
     initial_state.print_to_stdout()
     info('goal state')
     goal_state.print_to_stdout()
+
     path = bfs(initial_state, goal_state)
+
+    # path = astar(initial_state, goal_state)
+
+    print 'found in %d steps (BFS)' % (len(path))
+    path = astar(initial_state, goal_state)
     part1_example = len(path)
-    print 'found in %d steps : %s' % (len(path), path)
+    print 'found in %d steps (A*)' % (len(path))
     for path in path:
         print path
 
@@ -236,7 +280,8 @@ def main():
     all_items = set([ item for floor in initial_state.floors for item in floor ])
     goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
 
-    path = bfs(initial_state, goal_state)
+    # path = bfs(initial_state, goal_state)
+    path = astar(initial_state, goal_state)
 
     print 'found in %d steps : %s' % (len(path), path)
     for path in path:
