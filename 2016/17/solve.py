@@ -4,6 +4,7 @@ import unittest
 import sys
 import os
 import time
+import hashlib
 # from itertools import permutations
 # from itertools import combinations_with_replacement
 # from itertools import combinations
@@ -14,6 +15,32 @@ RUN_TESTS = False
 VISUALIZE = False
 
 WALL, DOOR_LR, DOOR_UD = '#', '|', '-'
+
+class Direction(object):
+    UP = (-1, 0)
+    DOWN = (1, 0)
+    RIGHT = (0, 1)
+    LEFT = (0, -1)
+
+def get_hash_start(passcode):
+    return hashlib.md5(passcode).hexdigest()[0:4]
+
+def get_directions_from_hash(hashed):
+    directions = set()
+    up, down, left, right = hashed
+    for d in [ up, down, left, right ]:
+        if d in 'bcdef':
+            if d == up:
+                directions.add(Direction.UP)
+            elif d == down:
+                directions.add(Direction.DOWN)
+            elif d == left:
+                directions.add(Direction.LEFT)
+            elif d == right:
+                directions.add(Direction.RIGHT)
+    return directions
+
+
 
 def get_grid(map_lines):
     return [ [ map_lines[y][x] for x in range(0, len(map_lines[y])) ] for y in range(0, len(map_lines)) ]
@@ -37,8 +64,11 @@ def main():
 
 class Test(unittest.TestCase):
     # @unittest.skip('skip')
-    def test(self):
-        self.assertTrue(True)
+    def test_get_hash_start(self):
+        self.assertEquals(get_hash_start('hijkl'), 'ced9')
+    def test_get_directions_from_hash(self):
+        self.assertEquals(get_directions_from_hash('ced9'), set([Direction.UP, Direction.DOWN, Direction.LEFT]))
+        self.assertEquals(get_directions_from_hash('f2bc'), set([Direction.UP, Direction.LEFT, Direction.RIGHT]))
 
 def get_input_lines(input_file='input'):
     try:
