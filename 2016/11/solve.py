@@ -8,12 +8,12 @@ import unittest
 import sys
 import os
 import time
-from itertools import permutations
+# from itertools import permutations
 # from itertools import combinations_with_replacement
-# from itertools import combinations
+from itertools import combinations
 # import deque
 
-VERBOSE = False
+VERBOSE = True
 RUN_TESTS = False
 VISUALIZE = False
 
@@ -54,19 +54,38 @@ class InputParser(object):
         return self.components
 
 class State(object):
-    def __init__(self, floors, current_floor):
-        self._floors = floors
-        self._current_floor = current_floor
+    def __init__(self, floors, floor_index):
+        self.parent = None
+        self._floors = [ sorted(floor) for floor in floors ]
+        self._current_floor = floor_index
+
+        self.h_score = 0
+        self.g_score = float('inf')
+
+    def move_cost(self):
+        return 1
+
+    def heuristic(self):
+        return len(self.floors) - self.floor_index + len(self.items_on_floor_four())
+
+    @property
+    def f_score(self):
+        return self.h_score + self.g_score
 
     @property
     def floors(self):
         return self._floors
 
     @property
-    def current_floor(self):
+    def floor_index(self):
         return self._current_floor
 
+    def items_on_floor_four(self):
+        return set([ item for item in self.floors[3] ])
+
     def is_valid(self):
+        # if len(self.items) != sum(map(len, self.floors)):
+        #     return False
         for floor in self.floors:
             chips = [ chip.split('-')[0] for chip in floor if chip.endswith('-microchip') ]
             generators = [ gen.split('-')[0] for gen in floor if gen.endswith('-generator') ]
@@ -75,39 +94,139 @@ class State(object):
                     return False
         return True
 
+    def __str__(self):
+        return 'E%d %s' % (self.floor_index, [ floor for floor in self.floors ])
+
+    def __repr__(self):
+        return 'State %d %s' % (self.floor_index, self.floors)
+
+    def print_to_stdout(self):
+        print
+        for i in range(0, len(self.floors)):
+            floor_indicator = 'E%d' % i if self.floor_index == i else str(i)
+            print '%2s - %s' % (floor_indicator, self.floors[i])
+        print
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
+
 class StateGenerator(object):
     def __init__(self, current):
-        self._current = current
-        self._successors = []
+        self.current = current
 
-    @property
-    def current(self):
-        return self._current
-
-    @property
     def successors(self):
-        return self._successors
+        floor_index = self.current.floor_index
+        floor_state = self.current.floors
+        floor_items = self.current.floors[floor_index]
 
-    def generate_successors(self):
-        states = []
-        current_floor = self.current.current_floor
-        current_floors = self.current.floors
-        can_go_down = current_floor > 0
-        can_go_up = current_floor < 3
+        candidates = set()
 
-        if can_go_up:
-            floors = [ [], [], [], [] ]
-            for i in range(current_floor, len(current_floors) - 1):
-                candidates = [ State(x, i) for x in permutations(current_floors) ]
-                states += [ state for state in candidates if state.is_valid() ]
 
-        if can_go_down:
-            floors = [ [], [], [], [] ]
-            for i in range(current_floor, 0, -1):
-                candidates = [ State(x, i) for x in permutations(current_floors) ]
-                states += [ state for state in candidates if state.is_valid() ]
+        bottom_floor_with_items = 0
+        for i in range(0, len(floor_state)):
+            if len(floor_state[i]) > 0:
+                bottom_floor_with_items = i
+                break
 
-        self._successors = states
+        going_up = False
+
+        for i in (1, -1):
+            next_floor_index = floor_index + i
+            if next_floor_index >= len(floor_state) or next_floor_index < bottom_floor_with_items:
+                continue
+
+            if next_floor_index > floor_index:
+                going_up = True
+
+            next_floor_items = floor_state[next_floor_index]
+            items = floor_items[:]
+            combos = list(combinations(items, 1)) + list(combinations(items, 2))
+
+            for combo in combos:
+                new_floor_items = [ item for item in floor_items if item not in combo ]
+                new_next_floor_items = [ item for item in combo ] + next_floor_items
+
+                new_floor_state = floor_state[:]
+                # new_floor_state[floor_index] = new_floor_items
+                # new_floor_state[next_floor_index] = new_next_floor_items
+
+                new_floor_state[floor_index] = new_floor_items
+                new_floor_state[next_floor_index] = new_next_floor_items
+                new_state = State(new_floor_state, next_floor_index)
+                if new_state.is_valid():
+                    candidates.add(new_state)
+        return candidates
+
+def bfs(start, goal):
+    visited = set()
+    frontier = set([start])
+    steps = 0
+
+    all_items = set([ item for floor in goal.floors for item in floor ])
+    current = start
+    while len(frontier) > 0:
+        new_frontier = set()
+
+        for state in frontier:
+            visited.add(state)
+            if state.items_on_floor_four() == all_items:
+                current = state
+                path = []
+                path.append(current)
+                while current.parent and current.parent != start:
+                    path.append(current.parent)
+                    current = current.parent
+                return path[::-1]
+            successors = StateGenerator(state).successors()
+
+            for successor in successors:
+                successor.parent = state
+                if successor not in visited:
+                    new_frontier.add(successor)
+        diff = len(new_frontier) - len(frontier)
+        frontier = new_frontier
+        steps += 1
+        debug('steps : %3d frontier %6d, (diff : %4d)' % (steps, len(frontier), diff))
+    raise ValueError('could not find path')
+
+def astar(start, goal):
+    fringe = set([start])
+    closed = set()
+    visited = set()
+
+    all_items = set([ item for floor in goal.floors for item in floor ])
+
+    while fringe:
+        current = min(fringe, key=lambda state: state.f_score)
+
+        visited.add(current)
+
+        if current.items_on_floor_four() == all_items:
+            path = []
+            while current.parent and current.parent != start:
+                path.append(current.parent)
+                current = current.parent
+            return path[::-1]
+        fringe.remove(current)
+        closed.add(current)
+        for state in StateGenerator(current).successors():
+            visited.add(state)
+            if state in closed:
+                continue
+            state.parent = current
+            cost = current.g_score + 1
+            if state in fringe:
+                if state.g_score > cost:
+                    state.g_score = cost
+            else:
+                state.g_score = state.move_cost()
+                state.h_score = state.heuristic()
+                fringe.add(state)
+
 
 
 
@@ -116,15 +235,50 @@ class StateGenerator(object):
 def main():
     example_lines = get_input_lines(input_file='example_input')
     lines = get_input_lines()
-    part1_example = None
-    part1 = None
+    lines_part_two = get_input_lines(input_file='input_part_two')
+    initial_state = State(InputParser(example_lines).get_initial_state(), 0)
+    all_items = set([ item for floor in initial_state.floors for item in floor ])
+    goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
+
+    info('initial state')
+    initial_state.print_to_stdout()
+    info('goal state')
+    goal_state.print_to_stdout()
+
+    path = bfs(initial_state, goal_state)
+
+    # path = astar(initial_state, goal_state)
+
+    print 'found in %d steps (BFS)' % (len(path))
+    path = astar(initial_state, goal_state)
+    part1_example = len(path)
+    # print 'found in %d steps (A*)' % (len(path))
+    for step in path:
+        print step
+
+    initial_state = State(InputParser(lines_part_two).get_initial_state(), 0)
+    all_items = set([ item for floor in initial_state.floors for item in floor ])
+    goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
+
+    info('initial state')
+    initial_state.print_to_stdout()
+    info('goal state')
+    goal_state.print_to_stdout()
+
+    path = bfs(initial_state, goal_state)
+    # path = astar(initial_state, goal_state)
+
+    print 'found in %d steps' % (len(path))
+    for step in path:
+        print step
+    part1 = len(path)
 
     part2_example = None
     part2 = None
 
     info('part 1')
-    info('example  : %s' % (part1_example))
-    info('solution : %s' % (part1))
+    info('example  : %d' % (part1_example))
+    info('solution : %d' % (part1))
 
     print
 
@@ -135,53 +289,85 @@ def main():
 
 class Test(unittest.TestCase):
     def setUp(self):
-        self.lines = [
-'The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.',
-'The second floor contains a hydrogen generator.',
-'The third floor contains a lithium generator.',
-'The fourth floor contains nothing relevant.',
-                ]
-
-        # self.lines = [
-# 'The first floor contains a hydrogen-compatible microchip and a lithium microchip.',
-# 'The second floor contains a hydrogen generator.',
-# 'The third floor contains a lithium generator.',
-# 'The fourth floor contains nothing relevant.',
-        #         ]
-
-        # self.lines = [
-# 'The first floor contains a promethium generator and a promethium-compatible microchip.',
-# 'The second floor contains a cobalt generator, a curium generator, a ruthenium generator, and a plutonium generator.',
-# 'The third floor contains a cobalt-compatible microchip, a curium-compatible microchip, a ruthenium-compatible microchip, and a plutonium-compatible microchip.',
-# 'The fourth floor contains nothing relevant.',
-        # ]
+        self.example_lines = get_input_lines(input_file='example_input')
+        self.lines = get_input_lines()
 
     def test_parse(self):
-        parser = InputParser(self.lines)
-        for floor in parser.get_initial_state():
-            print floor
+        floors = InputParser(self.example_lines).get_initial_state()
+        self.assertEquals(floors[0], ['hydrogen-microchip', 'lithium-microchip'])
+        self.assertEquals(floors[1], ['hydrogen-generator'])
+        self.assertEquals(floors[2], ['lithium-generator'])
+        self.assertEquals(floors[3], [])
 
-    def test_state(self):
         floors = InputParser(self.lines).get_initial_state()
-        state = State(floors, 0)
-        print state.is_valid()
+        self.assertEquals(floors[0], ['promethium-generator', 'promethium-microchip'])
+        self.assertEquals(floors[1], ['cobalt-generator', 'curium-generator', 'ruthenium-generator', 'plutonium-generator'])
+        self.assertEquals(floors[2], ['cobalt-microchip', 'curium-microchip', 'ruthenium-microchip', 'plutonium-microchip'])
+        self.assertEquals(floors[3], [])
+
+    def test_state_invalid_mixed_unconnected(self):
+        self.assertFalse(State([['promethium-generator', 'cobalt-microchip'], [], [], []], 0).is_valid())
+        self.assertFalse(State([['promethium-generator', 'promethium-microchip', 'cobalt-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_connected(self):
+        self.assertTrue(State([['promethium-generator', 'promethium-microchip', 'cobalt-generator', 'cobalt-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_no_generators(self):
+        self.assertTrue(State([['promethium-microchip', 'cobalt-microchip'], [], [], []], 0).is_valid())
+        self.assertTrue(State([['promethium-microchip', 'cobalt-microchip', 'whatever-microchip'], [], [], []], 0).is_valid())
+
+    def test_state_valid_mixed_generators(self):
+        self.assertTrue(State([['promethium-generator', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
+        self.assertTrue(State([['promethium-generator', 'promethium-microchip', 'cobalt-generator', 'whatever-generator'], [], [], []], 0).is_valid())
+
+    def test_state_is_valid_for_inputs(self):
+        self.assertTrue(State(InputParser(self.example_lines).get_initial_state(), 0).is_valid())
+        self.assertTrue(State(InputParser(self.lines).get_initial_state(), 0).is_valid())
 
     def test_state_generator(self):
-        floors = InputParser(self.lines).get_initial_state()
-        state = State(floors, 0)
-        gen = StateGenerator(state)
-        gen.generate_successors()
-        i = 0
-        for state in gen.successors:
-            print i
-            for floor in state.floors:
-                print floor
-            i += 1
+        initial_state = State(InputParser(self.example_lines).get_initial_state(), 0)
+        successors = StateGenerator(initial_state).successors()
 
+        print 'current'
+        initial_state.print_to_stdout()
 
-    def test_part_two_examples(self):
-        pass
+        print 'possible'
 
+        for successor in successors:
+            successor.print_to_stdout()
+        if len(successors) == 1:
+            for successor in successors:
+                for x in StateGenerator(successor).successors():
+                    successor.print_to_stdout()
+                break
+
+        all_items = set([ item for floor in initial_state.floors for item in floor ])
+        print 'all items : %s' % all_items
+        self.assertNotEquals(initial_state.items_on_floor_four(), all_items)
+
+    def test_state_equality(self):
+        s1 = State([[], [], [], []], 0)
+        s2 = State([[], [], [], []], 0)
+        self.assertEquals(s1, s2)
+
+        s1 = State([['x-generator'], [], [], []], 0)
+        s2 = State([['x-generator'], [], [], []], 0)
+        self.assertEquals(s1, s2)
+
+        seen = set()
+        seen.add(s1)
+        seen.add(s2)
+
+        self.assertEquals(len(seen), 1)
+        s3 = State([['x-generator'], [], [], []], 1)
+        seen.add(s3)
+        self.assertEquals(len(seen), 2)
+        seen.add( State([['x-generator'], [], [], []], 1))
+        self.assertEquals(len(seen), 2)
+
+        seen.add( State([['x-generator'], [], [], []], 2))
+        seen.add( State([['x-generator'], [], [], []], 3))
+        self.assertEquals(len(seen), 4)
 
 def get_input_lines(input_file='input'):
     try:
@@ -190,9 +376,9 @@ def get_input_lines(input_file='input'):
         warn('could not read input file %s' % input_file)
         return []
 
-def debug(message):
+def debug(thing):
     if VERBOSE:
-        _print(message, color='green')
+        _print(str(thing), color='green')
 
 def warn(message):
     _print(message, color='yellow')
@@ -234,8 +420,9 @@ def process_args(args):
         VERBOSE = '--verbose' in args or '-v' in args
         RUN_TESTS = '--test' in args or '-t' in args
     if RUN_TESTS:
-        args = []
-        unittest.main(argv=[sys.argv[0]])
+        args = [ '-v' ]
+        VERBOSE = True
+        unittest.main(argv=[sys.argv[0]] + args)
     debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
 
 if __name__ == '__main__':
