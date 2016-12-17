@@ -86,29 +86,38 @@ def print_grid(grid):
     print out
 
 
-def bfs(start, goal, grid):
+def bfs(start, goal, grid, find_longest=False):
     visited = set()
     fringe = set([start])
     steps = 0
+    paths = []
     while len(fringe) > 0:
         new_fringe = set()
         for current in fringe:
             y, x, passcode = current
             if (y, x) == goal:
-                warn('found in %d steps' % steps)
-                return passcode.replace(start[2], '')
+                if not find_longest:
+                    debug('found in %d steps' % steps)
+                    return passcode.replace(start[2], '')
+                else:
+                    paths.append(passcode.replace(start[2], ''))
+            else:
+                hashed = get_hash_start(passcode)
+                directions = get_directions_from_hash(hashed)
 
-            hashed = get_hash_start(passcode)
-            directions = get_directions_from_hash(hashed)
-
-            visited.add(current)
-            for move in get_moves(current, grid):
-                if move not in visited:
-                    # debug('candidate move : %s' % str(move))
-                    new_fringe.add(move)
+                visited.add(current)
+                for move in get_moves(current, grid):
+                    if move not in visited:
+                        # debug('candidate move : %s' % str(move))
+                        new_fringe.add(move)
         fringe = new_fringe
         steps += 1
-    raise ValueError('not found')
+
+
+    if find_longest and not paths:
+        raise ValueError('not found')
+
+    return max(map(len, paths))
 
 
 
@@ -116,25 +125,8 @@ def bfs(start, goal, grid):
 def main():
     map_lines = get_input_lines(input_file='map_input')
     grid = get_grid(map_lines)
-    starting = [
-        (1, 1, 'hijkl'),
-        (1, 1, 'ihgpwlah'),
-        (1, 1, 'kglvqrro'),
-        (1, 1, 'ulqzkmiv'),
-        (1, 1, 'pslxynzg')
-        ]
-
-    goal = (7, 7)
-    print grid[goal[0]][goal[1]]
-    for start in starting:
-        try:
-            info('start : %s' % (str(start)))
-            path = bfs(start, goal, grid)
-            info('%s -> %s' % (str(start), path))
-        except ValueError:
-            warn('could not find path for %s' % str(start))
-    print_grid(grid)
-
+    print 'part 1 : %s' % bfs( (1, 1, 'pslxynzg'), (7, 7), grid)
+    print 'part 2 : %d' % bfs( (1, 1, 'pslxynzg'), (7, 7), grid, True)
 
 
 class Test(unittest.TestCase):
@@ -154,12 +146,19 @@ class Test(unittest.TestCase):
         moves = get_moves((2,1, 'hijklD'), self.grid)
         self.assertEquals(moves, set( [ (1, 1, 'hijklDU') ]))
 
-    def test_examples(self):
+    def test_find_shortest_path(self):
         print_grid(self.grid)
         goal = (7,7)
         self.assertEquals(bfs((1, 1, 'ihgpwlah'), goal, self.grid), 'DDRRRD')
         self.assertEquals(bfs((1, 1, 'kglvqrro'), goal, self.grid), 'DDUDRLRRUDRD')
         self.assertEquals(bfs((1, 1, 'ulqzkmiv'), goal, self.grid), 'DRURDRUDDLLDLUURRDULRLDUUDDDRR')
+
+    def test_find_longest_path_length(self):
+        print_grid(self.grid)
+        goal = (7,7)
+        self.assertEquals(bfs((1, 1, 'ihgpwlah'), goal, self.grid, True), 370)
+        self.assertEquals(bfs((1, 1, 'kglvqrro'), goal, self.grid, True), 492)
+        self.assertEquals(bfs((1, 1, 'ulqzkmiv'), goal, self.grid, True), 830)
 
 
 def get_input_lines(input_file='input'):
