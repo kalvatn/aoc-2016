@@ -154,8 +154,8 @@ class StateGenerator(object):
                 # new_floor_state[floor_index] = new_floor_items
                 # new_floor_state[next_floor_index] = new_next_floor_items
 
-                new_floor_state[floor_index] = sorted(new_floor_items)
-                new_floor_state[next_floor_index] = sorted(new_next_floor_items)
+                new_floor_state[floor_index] = new_floor_items
+                new_floor_state[next_floor_index] = new_next_floor_items
                 new_state = State(new_floor_state, next_floor_index)
                 if new_state.is_valid():
                     candidates.add(new_state)
@@ -174,7 +174,6 @@ def bfs(start, goal):
         for state in frontier:
             visited.add(state)
             if state.items_on_floor_four() == all_items:
-                print 'found goal'
                 current = state
                 path = []
                 path.append(current)
@@ -188,9 +187,10 @@ def bfs(start, goal):
                 successor.parent = state
                 if successor not in visited:
                     new_frontier.add(successor)
+        diff = len(new_frontier) - len(frontier)
         frontier = new_frontier
         steps += 1
-        debug('steps : %d frontier %d' % (steps, len(frontier)))
+        debug('steps : %3d frontier %6d, (diff : %4d)' % (steps, len(frontier), diff))
     raise ValueError('could not find path')
 
 def astar(start, goal):
@@ -235,6 +235,7 @@ def astar(start, goal):
 def main():
     example_lines = get_input_lines(input_file='example_input')
     lines = get_input_lines()
+    lines_part_two = get_input_lines(input_file='input_part_two')
     initial_state = State(InputParser(example_lines).get_initial_state(), 0)
     all_items = set([ item for floor in initial_state.floors for item in floor ])
     goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
@@ -251,20 +252,25 @@ def main():
     print 'found in %d steps (BFS)' % (len(path))
     path = astar(initial_state, goal_state)
     part1_example = len(path)
-    print 'found in %d steps (A*)' % (len(path))
-    for path in path:
-        print path
+    # print 'found in %d steps (A*)' % (len(path))
+    for step in path:
+        print step
 
-    initial_state = State(InputParser(lines).get_initial_state(), 0)
+    initial_state = State(InputParser(lines_part_two).get_initial_state(), 0)
     all_items = set([ item for floor in initial_state.floors for item in floor ])
     goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
+
+    info('initial state')
+    initial_state.print_to_stdout()
+    info('goal state')
+    goal_state.print_to_stdout()
 
     path = bfs(initial_state, goal_state)
     # path = astar(initial_state, goal_state)
 
-    print 'found in %d steps : %s' % (len(path), path)
-    for path in path:
-        print path
+    print 'found in %d steps' % (len(path))
+    for step in path:
+        print step
     part1 = len(path)
 
     part2_example = None
