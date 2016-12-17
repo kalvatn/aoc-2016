@@ -56,7 +56,7 @@ class InputParser(object):
 class State(object):
     def __init__(self, floors, floor_index):
         self.parent = None
-        self._floors = floors
+        self._floors = [ sorted(floor) for floor in floors ]
         self._current_floor = floor_index
 
         self.h_score = 0
@@ -143,42 +143,21 @@ class StateGenerator(object):
                 going_up = True
 
             next_floor_items = floor_state[next_floor_index]
-            # debug('%d -> %d' % (floor_index, next_floor_index))
-            # debug('current floor : %d (%s)' % (floor_index, floor_items))
-            # debug('next floor    : %d (%s)' % (next_floor_index, next_floor_items))
-
-            # print floor_items
             items = floor_items[:]
             combos = list(combinations(items, 1)) + list(combinations(items, 2))
-            # pairs = []
-            # elements = {
-            # }
-            # for item in items:
-            #     element, component = item.split('-')
-            #     if element not in elements:
-            #         elements[element] = []
-            #     elements[element].append(item)
-            # for k, v in elements.items():
-            #     if len(v) == 2:
-            #         pairs.append( (v[0], v[1]))
-
-            # if pairs and next_floor_index == 3:
-            #     combos = pairs
-            # if len(items) % 2 == 0 and len(pairs) == 2 and floor_index != 3:
-            #     combos = pairs
 
             for combo in combos:
                 new_floor_items = [ item for item in floor_items if item not in combo ]
                 new_next_floor_items = [ item for item in combo ] + next_floor_items
 
                 new_floor_state = floor_state[:]
-                new_floor_state[floor_index] = new_floor_items
-                new_floor_state[next_floor_index] = new_next_floor_items
+                # new_floor_state[floor_index] = new_floor_items
+                # new_floor_state[next_floor_index] = new_next_floor_items
+
+                new_floor_state[floor_index] = sorted(new_floor_items)
+                new_floor_state[next_floor_index] = sorted(new_next_floor_items)
                 new_state = State(new_floor_state, next_floor_index)
                 if new_state.is_valid():
-                    # debug('combo : %s' % list(combo))
-                    # debug('old floor state : %s' % floor_state)
-                    # debug('new floor state : %s' % new_floor_state)
                     candidates.add(new_state)
         return candidates
 
@@ -280,8 +259,8 @@ def main():
     all_items = set([ item for floor in initial_state.floors for item in floor ])
     goal_state = State([ [], [], [], [ item for item in all_items ] ], 3)
 
-    # path = bfs(initial_state, goal_state)
-    path = astar(initial_state, goal_state)
+    path = bfs(initial_state, goal_state)
+    # path = astar(initial_state, goal_state)
 
     print 'found in %d steps : %s' % (len(path), path)
     for path in path:
