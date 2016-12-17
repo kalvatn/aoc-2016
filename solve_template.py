@@ -4,33 +4,63 @@ import unittest
 import sys
 import os
 import time
-# from itertools import permutations
-# from itertools import combinations_with_replacement
-# from itertools import combinations
-# import deque
+from collections import deque
+
+from itertools import permutations
+from itertools import combinations_with_replacement
+from itertools import combinations
+
+import logging
+
+from stdlib import logutils
 
 VERBOSE = False
 RUN_TESTS = False
 VISUALIZE = False
 
-def main():
-    example_lines = get_input_lines(input_file='example_input')
-    lines = get_input_lines()
-    part1_example = None
-    part1 = None
+class Day(object):
+    def __init__(self, name, verbose=False, visualize=False):
+        self.name = name
+        self.verbose = verbose
+        self.visualize = visualize
+        self.log = logging.getLogger(name)
+        self.log.addHandler(logutils.ColorizingStreamHandler())
+        if self.verbose:
+            self.log.setLevel(logging.DEBUG)
 
-    part2_example = None
-    part2 = None
+    @staticmethod
+    def create_from_args(name, args):
+        visualize = '--visualize' in args
+        verbose = '--verbose' in args or '-v' in args
+        return Day(name, verbose, visualize)
 
-    info('part 1')
-    info('example  : %s' % (part1_example))
-    info('solution : %s' % (part1))
 
-    print
+    def read_input(self, input_file='input'):
+        lines = []
+        try:
+            with open(input_file, 'r') as in_file:
+                lines.append([ line.strip() for line in in_file ])
+        except:
+            self.log.warn("could not read input file '%s'" % input_file)
+        return lines
 
-    info('part 2')
-    info('example  : %s' % (part2_example))
-    info('solution : %s' % (part2))
+    def run(self):
+        self.read_input(input_file='example_input')
+        part1_example = None
+        part1 = None
+
+        part2_example = None
+        part2 = None
+
+        self.log.info('part 1')
+        self.log.info('example  : %s' % (part1_example))
+        self.log.info('solution : %s' % (part1))
+
+        print
+
+        self.log.info('part 2')
+        self.log.info('example  : %s' % (part2_example))
+        self.log.info('solution : %s' % (part2))
 
 class Test(unittest.TestCase):
     # @unittest.skip('skip')
@@ -44,57 +74,5 @@ def get_input_lines(input_file='input'):
         warn('could not read input file %s' % input_file)
         return []
 
-def debug(message):
-    if VERBOSE:
-        _print(message, color='green')
-
-def warn(message):
-    _print(message, color='yellow')
-
-def info(message):
-    print message
-
-def error(message):
-    _print(message, color='red')
-    sys.exit(1)
-
-def _print(message, color='default'):
-    if color == 'default':
-        print message
-    else:
-        _COLORS = {
-            'red' : '31m',
-            'green' : '32m',
-            'yellow' : '33m',
-            'blue' : '34m',
-            'magenta' : '35m',
-            'cyan' : '36m'
-        }
-        _CSI = "\x1B["
-        _RESET=_CSI+"0m"
-        if color in _COLORS:
-            print _CSI + _COLORS[color] + message + _RESET
-        else:
-            print message
-
-
-
-def process_args(args):
-    global RUN_TESTS
-    global VISUALIZE
-    global VERBOSE
-    if args:
-        VISUALIZE = '--visualize' in args
-        VERBOSE = '--verbose' in args or '-v' in args
-        RUN_TESTS = '--test' in args or '-t' in args
-    if RUN_TESTS:
-        args = []
-        unittest.main(argv=[sys.argv[0]])
-    debug('VERBOSE=%s, VISUALIZE=%s (%s)' % (VERBOSE, VISUALIZE, args))
-
 if __name__ == '__main__':
-    process_args(sys.argv[1:])
-    main()
-else:
-    process_args(sys.argv[1:])
-    main()
+    Day.create_from_args('template', sys.argv[1:]).run()
