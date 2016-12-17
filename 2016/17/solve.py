@@ -27,17 +27,16 @@ def get_hash_start(passcode):
 
 def get_directions_from_hash(hashed):
     directions = set()
-    up, down, left, right = hashed
-    for d in [ up, down, left, right ]:
-        if d in 'bcdef':
-            if d == up:
-                directions.add(Direction.UP)
-            elif d == down:
-                directions.add(Direction.DOWN)
-            elif d == left:
-                directions.add(Direction.LEFT)
-            elif d == right:
-                directions.add(Direction.RIGHT)
+
+    if hashed[0] in 'bcdef':
+        directions.add(Direction.UP)
+    if hashed[1] in 'bcdef':
+        directions.add(Direction.DOWN)
+    if hashed[2] in 'bcdef':
+        directions.add(Direction.LEFT)
+    if hashed[3] in 'bcdef':
+        directions.add(Direction.RIGHT)
+
     return directions
 
 def get_moves(current, grid):
@@ -47,23 +46,41 @@ def get_moves(current, grid):
     for dy, dx, d in get_directions_from_hash(hashed):
         nx = x + dx
         ny = y + dy
-        if len(grid) < ny < 0 or len(grid) < nx < 0:
-            continue
 
-        if grid[ny][nx] == WALL:
-            continue
-        moves.add((ny, nx, d))
+        try:
+            if grid[ny][nx] == WALL:
+                continue
+
+            if grid[ny][nx] in '|-':
+                if d == 'D':
+                    ny += 1
+                elif d == 'U':
+                    ny -= 1
+                elif d == 'L':
+                    nx -= 1
+                elif d == 'R':
+                    nx += 1
+
+            # debug('(%d, %d): %s' % (ny, nx, grid[ny][nx]))
+            moves.add((ny, nx, passcode + d))
+        except IndexError:
+            warn('oob? (%d, %d)' % (ny, nx))
     return moves
 
 
 
 def get_grid(map_lines):
-    return [ [ map_lines[y][x] for x in range(0, len(map_lines[y])) ] for y in range(0, len(map_lines)) ]
+    grid = [ [ map_lines[y][x] for x in range(0, len(map_lines[y])) ] for y in range(0, len(map_lines)) ]
+    # due to vim stripping newlines O_o
+    grid[7].append(' ')
+    grid[7].append(' ')
+    return grid
 
 def print_grid(grid):
     out = ''
     for y in range(0, len(grid)):
-        for x in range(0, len(grid[y])):
+        out += ''
+        for x in range(0, len(grid)):
             out += grid[y][x]
         out += '\n'
     print out
@@ -73,23 +90,25 @@ def bfs(start, goal, grid):
     visited = set()
     fringe = set([start])
     steps = 0
-    while fringe:
-        current = fringe.pop(0)
-        y, x, passcode = current
-        if (y, x) == goal:
-            print 'found'
-            break
+    while len(fringe) > 0:
+        new_fringe = set()
+        for current in fringe:
+            y, x, passcode = current
+            if (y, x) == goal:
+                warn('found in %d steps' % steps)
+                return passcode.replace(start[2], '')
 
-        hashed = get_hash_start(passcode)
-        directions = get_directions_from_hash(hashed)
+            hashed = get_hash_start(passcode)
+            directions = get_directions_from_hash(hashed)
 
-        visited.add(current)
-        for move in get_moves(current, directions, grid):
-            if move not in visited:
-                fringe.add(move)
+            visited.add(current)
+            for move in get_moves(current, grid):
+                if move not in visited:
+                    # debug('candidate move : %s' % str(move))
+                    new_fringe.add(move)
+        fringe = new_fringe
         steps += 1
-
-
+    raise ValueError('not found')
 
 
 
@@ -97,9 +116,23 @@ def bfs(start, goal, grid):
 def main():
     map_lines = get_input_lines(input_file='map_input')
     grid = get_grid(map_lines)
-    start = (1, 1, 'ihgpwlah')
-    goal = (len(grid)-1, len(grid)-1)
-    bfs(start, goal, grid)
+    starting = [
+        (1, 1, 'hijkl'),
+        (1, 1, 'ihgpwlah'),
+        (1, 1, 'kglvqrro'),
+        (1, 1, 'ulqzkmiv'),
+        (1, 1, 'pslxynzg')
+        ]
+
+    goal = (7, 7)
+    print grid[goal[0]][goal[1]]
+    for start in starting:
+        try:
+            info('start : %s' % (str(start)))
+            path = bfs(start, goal, grid)
+            info('%s -> %s' % (str(start), path))
+        except ValueError:
+            warn('could not find path for %s' % str(start))
     print_grid(grid)
 
 
@@ -116,7 +149,17 @@ class Test(unittest.TestCase):
 
     def test_get_moves(self):
         moves = get_moves((1,1, 'hijkl'), self.grid)
-        self.assertEquals(moves, set( [ (2, 1, 'D') ]))
+        self.assertEquals(moves, set( [ (3, 1, 'hijklD') ]))
+
+        moves = get_moves((2,1, 'hijklD'), self.grid)
+        self.assertEquals(moves, set( [ (1, 1, 'hijklDU') ]))
+
+    def test_examples(self):
+        print_grid(self.grid)
+        goal = (7,7)
+        self.assertEquals(bfs((1, 1, 'ihgpwlah'), goal, self.grid), 'DDRRRD')
+        self.assertEquals(bfs((1, 1, 'kglvqrro'), goal, self.grid), 'DDUDRLRRUDRD')
+        self.assertEquals(bfs((1, 1, 'ulqzkmiv'), goal, self.grid), 'DRURDRUDDLLDLUURRDULRLDUUDDDRR')
 
 
 def get_input_lines(input_file='input'):
@@ -155,7 +198,7 @@ def _print(message, color='default'):
         _CSI = "\x1B["
         _RESET=_CSI+"0m"
         if color in _COLORS:
-            print _CSI + _COLORS[color] + message + _RESET
+            print _CSI + _COLORS[color] + str(message) + _RESET
         else:
             print message
 
