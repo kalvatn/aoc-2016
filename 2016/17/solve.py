@@ -17,10 +17,10 @@ VISUALIZE = False
 WALL, DOOR_LR, DOOR_UD = '#', '|', '-'
 
 class Direction(object):
-    UP = (-1, 0)
-    DOWN = (1, 0)
-    RIGHT = (0, 1)
-    LEFT = (0, -1)
+    UP = (-1, 0, 'U')
+    DOWN = (1, 0, 'D')
+    RIGHT = (0, 1, 'R')
+    LEFT = (0, -1, 'L')
 
 def get_hash_start(passcode):
     return hashlib.md5(passcode).hexdigest()[0:4]
@@ -40,6 +40,21 @@ def get_directions_from_hash(hashed):
                 directions.add(Direction.RIGHT)
     return directions
 
+def get_moves(current, grid):
+    moves = set()
+    y, x, passcode = current
+    hashed = get_hash_start(passcode)
+    for dy, dx, d in get_directions_from_hash(hashed):
+        nx = x + dx
+        ny = y + dy
+        if len(grid) < ny < 0 or len(grid) < nx < 0:
+            continue
+
+        if grid[ny][nx] == WALL:
+            continue
+        moves.add((ny, nx, d))
+    return moves
+
 
 
 def get_grid(map_lines):
@@ -54,21 +69,55 @@ def print_grid(grid):
     print out
 
 
+def bfs(start, goal, grid):
+    visited = set()
+    fringe = set([start])
+    steps = 0
+    while fringe:
+        current = fringe.pop(0)
+        y, x, passcode = current
+        if (y, x) == goal:
+            print 'found'
+            break
+
+        hashed = get_hash_start(passcode)
+        directions = get_directions_from_hash(hashed)
+
+        visited.add(current)
+        for move in get_moves(current, directions, grid):
+            if move not in visited:
+                fringe.add(move)
+        steps += 1
+
+
+
+
+
+
 def main():
     map_lines = get_input_lines(input_file='map_input')
     grid = get_grid(map_lines)
+    start = (1, 1, 'ihgpwlah')
+    goal = (len(grid)-1, len(grid)-1)
+    bfs(start, goal, grid)
     print_grid(grid)
 
-    start = (0, 0)
 
 
 class Test(unittest.TestCase):
+    def setUp(self):
+        self.grid = get_grid(get_input_lines(input_file='map_input'))
     # @unittest.skip('skip')
     def test_get_hash_start(self):
         self.assertEquals(get_hash_start('hijkl'), 'ced9')
     def test_get_directions_from_hash(self):
         self.assertEquals(get_directions_from_hash('ced9'), set([Direction.UP, Direction.DOWN, Direction.LEFT]))
         self.assertEquals(get_directions_from_hash('f2bc'), set([Direction.UP, Direction.LEFT, Direction.RIGHT]))
+
+    def test_get_moves(self):
+        moves = get_moves((1,1, 'hijkl'), self.grid)
+        self.assertEquals(moves, set( [ (2, 1, 'D') ]))
+
 
 def get_input_lines(input_file='input'):
     try:
