@@ -13,24 +13,27 @@ VERBOSE = False
 RUN_TESTS = False
 VISUALIZE = False
 
+WALL, DOOR_LR, DOOR_UD = '#', '|', '-'
+
+def get_grid(map_lines):
+    return [ [ map_lines[y][x] for x in range(0, len(map_lines[y])) ] for y in range(0, len(map_lines)) ]
+
+def print_grid(grid):
+    out = ''
+    for y in range(0, len(grid)):
+        for x in range(0, len(grid[y])):
+            out += grid[y][x]
+        out += '\n'
+    print out
+
+
 def main():
-    example_lines = get_input_lines(input_file='example_input')
-    lines = get_input_lines()
-    part1_example = None
-    part1 = None
+    map_lines = get_input_lines(input_file='map_input')
+    grid = get_grid(map_lines)
+    print_grid(grid)
 
-    part2_example = None
-    part2 = None
+    start = (0, 0)
 
-    info('part 1')
-    info('example  : %s' % (part1_example))
-    info('solution : %s' % (part1))
-
-    print
-
-    info('part 2')
-    info('example  : %s' % (part2_example))
-    info('solution : %s' % (part2))
 
 class Test(unittest.TestCase):
     # @unittest.skip('skip')
