@@ -25,8 +25,19 @@ class Day(object):
         self.visualize = visualize
         self.log = logging.getLogger(name)
         self.log.addHandler(logutils.ColorizingStreamHandler())
+
+        if sys.argv:
+            args = sys.argv[1:]
+            self.visualize = '--visualize' in args
+            self.verbose = '--verbose' in args or '-v' in args
+
         if self.verbose:
             self.log.setLevel(logging.DEBUG)
+            self.log.info('loglevel DEBUG')
+
+        if self.visualize:
+            self.log.setLevel(logging.DEBUG)
+            self.log.info('visualize')
 
     @staticmethod
     def create_from_args(name, args):
@@ -37,9 +48,11 @@ class Day(object):
 
     def read_input(self, input_file='input'):
         lines = []
+        filepath = os.path.join(os.path.dirname(self.name), input_file)
+        print filepath
         try:
-            with open(input_file, 'r') as in_file:
-                lines.append([ line.strip() for line in in_file ])
+            with open(filepath, 'r') as in_file:
+                lines = [ line.strip() for line in in_file ]
         except:
             self.log.warn("could not read input file '%s'" % input_file)
         return lines
