@@ -29,11 +29,15 @@ class Day(object):
 
         if self.verbose:
             self.log.setLevel(logging.DEBUG)
-            self.log.info('loglevel DEBUG')
+        else:
+            self.log.setLevel(logging.INFO)
 
         if self.visualize:
             self.log.setLevel(logging.DEBUG)
             self.log.info('visualize')
+
+        self.log.info('loglevel: %s, verbose: %s, visualize: %s' % (self.log.getEffectiveLevel(), self.verbose, self.visualize))
+
 
     @staticmethod
     def create_from_args(name, args):
