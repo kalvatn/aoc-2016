@@ -4,6 +4,8 @@ import unittest
 
 from string import ascii_lowercase as letters
 
+from stdlib import aoc
+
 STRAIGHTS = [ letters[i:i+3] for i in range(0, len(letters) - 2) ]
 PAIRS = [ letter * 2 for letter in letters ]
 AMBIGUOUS = [ l for l in 'iol' ]
@@ -73,77 +75,77 @@ class Test(unittest.TestCase):
         pass
 
 
-def has_straight(password):
-    for i in range(0, len(password) - 2):
-        if password[i:i+3] in STRAIGHTS:
-            return True
-    return False
+class Day11(aoc.Day):
+    def __init__(self):
+        super(Day11, self).__init__(__file__)
 
-def has_two_pair(password):
-    found_pairs = set()
-    for i in range(0, len(password) - 1):
-        pair = password[i:i+2]
-        if pair in PAIRS and pair not in found_pairs:
-            found_pairs.add(pair)
-            if len(found_pairs) >= 2:
+    def has_straight(self, password):
+        for i in range(0, len(password) - 2):
+            if password[i:i+3] in STRAIGHTS:
                 return True
-    return False
+        return False
 
-def has_ambiguous(password):
-    for a in AMBIGUOUS:
-        if a in password:
-            return True
-    return False
+    def has_two_pair(self, password):
+        found_pairs = set()
+        for i in range(0, len(password) - 1):
+            pair = password[i:i+2]
+            if pair in PAIRS and pair not in found_pairs:
+                found_pairs.add(pair)
+                if len(found_pairs) >= 2:
+                    return True
+        return False
 
-def is_valid(password):
-    return has_straight(password) and has_two_pair(password) and not has_ambiguous(password)
+    def has_ambiguous(self, password):
+        for a in AMBIGUOUS:
+            if a in password:
+                return True
+        return False
 
-def get_letter_index(letter):
-    return letters.index(letter)
+    def is_valid(self, password):
+        return self.has_straight(password) and self.has_two_pair(password) and not self.has_ambiguous(password)
 
-def get_new_letter_index(letter):
-    index = get_letter_index(letter)
-    index = 0 if index + 1 >= len(letters) else index + 1
-    return index
+    def get_letter_index(self, letter):
+        return letters.index(letter)
 
-def increment_letter(letter):
-    return letters[get_new_letter_index(letter)]
+    def get_new_letter_index(self, letter):
+        index = self.get_letter_index(letter)
+        index = 0 if index + 1 >= len(letters) else index + 1
+        return index
 
-def increment(password):
-    new_password = ''
-    found_wrap = False
-    reversed_password = ''.join(reversed(password))
-    for i in range(0, len(password)):
-        letter = reversed_password[i]
-        new_letter = increment_letter(letter)
-        new_password += new_letter
-        if new_letter == 'a':
-            found_wrap = True
-        else:
-            new_password += reversed_password[i+1:]
-            break
+    def increment_letter(self, letter):
+        return letters[self.get_new_letter_index(letter)]
 
-    return ''.join(reversed(new_password))
+    def increment(self, password):
+        new_password = ''
+        found_wrap = False
+        reversed_password = ''.join(reversed(password))
+        for i in range(0, len(password)):
+            letter = reversed_password[i]
+            new_letter = self.increment_letter(letter)
+            new_password += new_letter
+            if new_letter == 'a':
+                found_wrap = True
+            else:
+                new_password += reversed_password[i+1:]
+                break
+
+        return ''.join(reversed(new_password))
 
 
-def find_next(password):
-    password = increment(password)
-    while not is_valid(password):
-        # print password
-        password = increment(password)
-    return password
+    def find_next(self, password):
+        password = self.increment(password)
+        while not self.is_valid(password):
+            # print password
+            password = self.increment(password)
+        return password
 
-def main(lines):
-    part1 = find_next(lines[0])
-    part2 = find_next(part1)
+    def run(self):
+        lines = self.read_input()
+        part1 = self.find_next(lines[0])
+        part2 = self.find_next(part1)
 
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
+        self.log.info('part 1 : %s' % (part1))
+        self.log.info('part 2 : %s' % (part2))
 
 if __name__ == '__main__':
-    # unittest.main()
-    lines = []
-    with open('input') as file:
-        for line in file:
-            lines.append(line.strip())
-    main(lines)
+    Day11().run()
