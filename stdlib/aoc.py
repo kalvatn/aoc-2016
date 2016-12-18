@@ -36,7 +36,11 @@ class Day(object):
             self.log.setLevel(logging.DEBUG)
             self.log.info('visualize')
 
-        self.log.info('loglevel: %s, verbose: %s, visualize: %s' % (self.log.getEffectiveLevel(), self.verbose, self.visualize))
+        self.log.info('name: %s, loglevel: %s, verbose: %s, visualize: %s' % (
+            '/'.join(self.name.split('/')[-3:]),
+            self.log.getEffectiveLevel(),
+            self.verbose,
+            self.visualize))
 
 
     @staticmethod
