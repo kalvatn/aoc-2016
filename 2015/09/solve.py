@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from stdlib import aoc
 import operator
 
 class Location(object):
@@ -25,72 +26,56 @@ class Location(object):
     def __repr__(self):
         return str(self)
 
-def main(lines):
-    # print lines
-    locations = {}
-    for line in lines:
-        route, distance = [ x.strip() for x in line.split('=') ]
-        start, end = [ x.strip() for x in route.split('to') ]
-        # print "start : '%s', end : '%s', distance : '%d'" % (start, end, int(distance))
-        if start not in locations:
-            locations[start] = Location(start)
-        if end not in locations:
-            locations[end] = Location(end)
+class Day9(aoc.Day):
+    def __init__(self):
+        super(Day9, self).__init__(__file__)
 
-        loc1 = locations[start]
-        loc2 = locations[end]
-        loc1.add_route(loc2, int(distance))
-        loc2.add_route(loc1, int(distance))
+    def run(self):
+        lines = self.read_input()
+        # print lines
+        locations = {}
+        for line in lines:
+            route, distance = [ x.strip() for x in line.split('=') ]
+            start, end = [ x.strip() for x in route.split('to') ]
+            # print "start : '%s', end : '%s', distance : '%d'" % (start, end, int(distance))
+            if start not in locations:
+                locations[start] = Location(start)
+            if end not in locations:
+                locations[end] = Location(end)
 
-    visited = []
-    distance = 0
-    min_distance = -1
-    max_distance = -1
-    for loc in locations.values():
-        distance = visit(loc, 0, [], locations)
-        if min_distance < 0:
-            min_distance = distance
-        if distance < min_distance:
-            min_distance = distance
+            loc1 = locations[start]
+            loc2 = locations[end]
+            loc1.add_route(loc2, int(distance))
+            loc2.add_route(loc1, int(distance))
 
-        if max_distance < 0:
-            max_distance = distance
-        if distance > max_distance:
-            max_distance = distance
-    part1 = min_distance
-    part2 = max_distance
+        visited = []
+        distance = 0
+        min_distance = float('inf')
+        max_distance = -1
+        for loc in locations.values():
+            short_distance = self.visit(loc, 0, [], locations)
+            min_distance = short_distance if short_distance < min_distance else min_distance
 
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
+            long_distance = self.visit(loc, 0, [], locations, longest=True)
+            max_distance = long_distance if long_distance > max_distance else max_distance
 
-def visit(start, distance, visited, locations):
-    visited.append(start.name)
-    # print 'visited : %s , distance : %d' % (visited, distance)
-    if len(visited) == len(locations):
+        part1 = min_distance
+        part2 = max_distance
+
+        self.log.info('part 1 : %s' % (part1))
+        self.log.info('part 2 : %s' % (part2))
+
+    def visit(self, start, distance, visited, locations, longest=False):
+        visited.append(start.name)
+        if len(visited) == len(locations):
+            return distance
+        routes = start.get_routes_ordered_by_shortest() if not longest else start.get_routes_ordered_by_longest()
+        for k in routes:
+            if k[0] in visited:
+                continue
+            distance += k[1]
+            return self.visit(locations[k[0]], distance, visited, locations, longest=longest)
         return distance
 
-    # for k in start.get_routes_ordered_by_shortest():
-    for k in start.get_routes_ordered_by_longest():
-        if k[0] in visited:
-            continue
-        distance += k[1]
-        return visit(locations[k[0]], distance, visited, locations)
-    return distance
-
-
-
-
 if __name__ == '__main__':
-    test_input = [
-        # 'London to Dublin = 464',
-        # 'London to Belfast = 518',
-        # 'Dublin to Belfast = 141',
-    ]
-    lines = []
-    if test_input:
-        lines = test_input
-    else:
-        with open('input') as file:
-            for line in file:
-                lines.append(line.strip())
-    main(lines)
+    Day9().run()

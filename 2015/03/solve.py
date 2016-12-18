@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from stdlib import aoc
 
 UP    = '^'
 DOWN  = 'v'
@@ -20,71 +21,69 @@ ALL = 'all'
 SANTA = 'santa'
 ROBOT = 'robot'
 
-def main(lines):
-    # lines = [
-    #     # '^v',
-    #     # '^>v<',
-    #     '^v^v^v^v^v'
-    # ]
-    directions = lines[0]
+class Day3(aoc.Day):
+    def __init__(self):
+        return super(Day3, self).__init__(__file__)
 
-    pos = {
-        SANTA : [0, 0],
-        ROBOT : [0, 0],
-        ALL : [0,0]
-    }
+    def run(self):
+        lines = self.read_input()
+        # lines = [
+        #     # '^v',
+        #     # '^>v<',
+        #     '^v^v^v^v^v'
+        # ]
+        directions = lines[0]
 
-    turn = SANTA
-    for direction in directions:
-        x_change = 0
-        y_change = 0
-        if direction in [ UP, DOWN ]:
-            y_change = 1 if direction == UP else -1
-        if direction in [ LEFT, RIGHT ]:
-            x_change = 1 if direction == RIGHT else -1
+        pos = {
+            SANTA : [0, 0],
+            ROBOT : [0, 0],
+            ALL : [0,0]
+        }
 
-        all_pos = (pos[ALL][0] + x_change, pos[ALL][1] + y_change)
-        turn_pos = (pos[turn][0] + x_change, pos[turn][1] + y_change)
+        turn = SANTA
+        for direction in directions:
+            x_change = 0
+            y_change = 0
+            if direction in [ UP, DOWN ]:
+                y_change = 1 if direction == UP else -1
+            if direction in [ LEFT, RIGHT ]:
+                x_change = 1 if direction == RIGHT else -1
 
-        pos[ALL] = all_pos
-        pos[turn] = turn_pos
+            all_pos = (pos[ALL][0] + x_change, pos[ALL][1] + y_change)
+            turn_pos = (pos[turn][0] + x_change, pos[turn][1] + y_change)
 
-        # print '%s - %s' % (ALL, all_pos)
-        # print '%s - %s' % (turn, turn_pos)
+            pos[ALL] = all_pos
+            pos[turn] = turn_pos
 
-        if all_pos not in PART_ONE_VISITED:
-            PART_ONE_VISITED[all_pos] = 0
-        PART_ONE_VISITED[all_pos] += 1
+            # print '%s - %s' % (ALL, all_pos)
+            # print '%s - %s' % (turn, turn_pos)
 
-        v = SANTA_VISITED if turn == SANTA else ROBOT_VISITED
+            if all_pos not in PART_ONE_VISITED:
+                PART_ONE_VISITED[all_pos] = 0
+            PART_ONE_VISITED[all_pos] += 1
 
-        if turn_pos not in v:
-            v[turn_pos] = 0
-        v[turn_pos] += 1
-        turn = ROBOT if turn == SANTA else SANTA
+            v = SANTA_VISITED if turn == SANTA else ROBOT_VISITED
 
-    part_two_visited = set()
-    houses_with_presents = 0
-    for k, v in PART_ONE_VISITED.items():
-        if v >= 1:
-            houses_with_presents += 1
-    for k, v in SANTA_VISITED.items():
-        if v >= 1:
-            part_two_visited.add(k)
-    for k, v in ROBOT_VISITED.items():
-        if v >= 1:
-            part_two_visited.add(k)
-    # print part_two_visited
+            if turn_pos not in v:
+                v[turn_pos] = 0
+            v[turn_pos] += 1
+            turn = ROBOT if turn == SANTA else SANTA
 
-    print 'part 1 : %d' % houses_with_presents
-    print 'part 2 : %d' % len(part_two_visited)
+        part_two_visited = set()
+        houses_with_presents = 0
+        for k, v in PART_ONE_VISITED.items():
+            if v >= 1:
+                houses_with_presents += 1
+        for k, v in SANTA_VISITED.items():
+            if v >= 1:
+                part_two_visited.add(k)
+        for k, v in ROBOT_VISITED.items():
+            if v >= 1:
+                part_two_visited.add(k)
+        # print part_two_visited
 
-
-
+        self.log.info('part 1 : %d' % (houses_with_presents))
+        self.log.info('part 2 : %d' % len(part_two_visited))
 
 if __name__ == '__main__':
-    lines = []
-    with open('input') as file:
-        for line in file:
-            lines.append(line.strip())
-    main(lines)
+    Day3().run()

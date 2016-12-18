@@ -1,52 +1,36 @@
 #!/usr/bin/env python
+from stdlib import aoc
 
-def main(lines):
-    for sequence in lines:
-        original = sequence
-        for i in range(0, 40):
-            sequence = new_sequence(sequence)
+class Day10(aoc.Day):
+    def __init__(self):
+        return super(Day10, self).__init__(__file__)
 
-        print 'part 1 : %s' % (len(sequence))
-        sequence = original
-        for i in range(0, 50):
-            sequence = new_sequence(sequence)
+    def run(self):
+        for sequence in self.read_input():
+            original = sequence
+            for i in range(0, 40):
+                sequence = self.new_sequence(sequence)
 
-        print 'part 2 : %s' % (len(sequence))
+            self.log.info('part 1 : %s' % (len(sequence)))
+            sequence = original
+            for i in range(0, 50):
+                sequence = self.new_sequence(sequence)
 
-def new_sequence(sequence):
-    digit = sequence[0]
-    count = 0
-    builder = []
-    for i in sequence:
-        if i != digit:
-            builder.append(str(count) + digit)
-            digit = i
-            count = 0
-        count += 1
+            self.log.info('part 2 : %s' % (len(sequence)))
 
-    builder.append(str(count) + digit)
-    return ''.join(builder)
+    def new_sequence(self, sequence):
+        digit = sequence[0]
+        count = 0
+        builder = []
+        for i in sequence:
+            if i != digit:
+                builder.append(str(count) + digit)
+                digit = i
+                count = 0
+            count += 1
 
-
-
-
-
-
+        builder.append(str(count) + digit)
+        return ''.join(builder)
 
 if __name__ == '__main__':
-    test_input = [
-        # '1',
-        # '11',
-        # '21',
-        # '1211',
-        # '111221'
-
-    ]
-    lines = []
-    if test_input:
-        lines = test_input
-    else:
-        with open('input') as file:
-            for line in file:
-                lines.append(line.strip())
-    main(lines)
+    Day10().run()
