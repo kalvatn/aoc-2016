@@ -3,46 +3,38 @@
 import unittest
 import json
 
-class Test(unittest.TestCase):
-    def test_part_one_examples(self):
-        pass
+from stdlib import aoc
 
-    def test_part_two_examples(self):
-        pass
+class Day12(aoc.Day):
+    def __init__(self):
+        super(Day12, self).__init__(__file__)
 
-def get_number_sum(data, ignore=None):
-    number_sum = 0
-    try:
-        number_sum += int(data)
-    except :
-        if isinstance(data, list):
-            for item in data:
-                number_sum += get_number_sum(item, ignore=ignore)
-        elif isinstance(data, dict):
-            if ignore and ignore in data.values():
-                # print 'ignoring red data %s' % data
-                pass
+    def get_number_sum(self, data, ignore=None):
+        number_sum = 0
+        try:
+            number_sum += int(data)
+        except:
+            if isinstance(data, list):
+                for item in data:
+                    number_sum += self.get_number_sum(item, ignore=ignore)
+            elif isinstance(data, dict):
+                if ignore and ignore in data.values():
+                    pass
+                else:
+                    number_sum += self.get_number_sum(data.values(), ignore=ignore)
             else:
-                number_sum += get_number_sum(data.values(), ignore=ignore)
-        else:
-            # print 'unknown data %s' % data
-            pass
-    return number_sum
+                pass
+        return number_sum
 
-def main(lines):
-    json_data = json.loads(''.join(lines))
+    def run(self):
+        lines = self.read_input()
+        json_data = json.loads(''.join(lines))
 
-    part1 = get_number_sum(json_data)
+        part1 = self.get_number_sum(json_data)
+        part2 = self.get_number_sum(json_data, ignore='red')
 
-    part2 = get_number_sum(json_data, 'red')
-
-    print 'part 1 : %s' % (part1)
-    print 'part 2 : %s' % (part2)
+        self.log.info('part 1 : %s' % (part1))
+        self.log.info('part 2 : %s' % (part2))
 
 if __name__ == '__main__':
-    # unittest.main()
-    lines = []
-    with open('input') as file:
-        for line in file:
-            lines.append(line.strip())
-    main(lines)
+    Day12().run()
