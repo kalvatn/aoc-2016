@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 
-import unittest
+import operator
 import re
 
-class Test(unittest.TestCase):
-    def test_part_one_examples(self):
-        pass
-
-    def test_part_two_examples(self):
-        pass
+from stdlib import aoc
 
 class Reindeer(object):
     def __init__(self, name, speed, fly_duration, rest_duration):
@@ -43,58 +38,54 @@ class Reindeer(object):
     def __repr__(self):
         return self.name
 
-import operator
 
-def find_leading(reindeers):
-    ranking = [ (reindeer, reindeer.total_distance) for reindeer in reindeers ]
-    ranking = [ r for r in reversed(sorted(ranking, key=operator.itemgetter(1))) ]
-    best = [ranking[0]]
-    for tied in ranking[1:]:
-        if tied[1] == best[0][1]:
-            best.append(tied)
-    return best
+class Day14(aoc.Day):
+    def __init__(self):
+        super(Day14, self).__init__(__file__)
 
+    def find_leading(self, reindeers):
+        ranking = [ (reindeer, reindeer.total_distance) for reindeer in reindeers ]
+        ranking = [ r for r in reversed(sorted(ranking, key=operator.itemgetter(1))) ]
+        best = [ranking[0]]
+        for tied in ranking[1:]:
+            if tied[1] == best[0][1]:
+                best.append(tied)
+        return best
 
+    def run(self):
+        lines = self.read_input()
+        part1 = None
+        part2 = None
 
-def main(lines):
-    part1 = None
-    part2 = None
+        pattern = re.compile(r'^(\w+) can fly (\d+) km\/s for (\d+) seconds, but then must rest for (\d+) seconds\.$')
+        reindeers = []
+        for line in lines:
+            match = pattern.match(line)
+            name, speed, fly_duration, rest_duration = match.groups()
+            reindeers.append(Reindeer(name, int(speed), int(fly_duration), int(rest_duration)))
 
-    pattern = re.compile(r'^(\w+) can fly (\d+) km\/s for (\d+) seconds, but then must rest for (\d+) seconds\.$')
-    reindeers = []
-    for line in lines:
-        match = pattern.match(line)
-        name, speed, fly_duration, rest_duration = match.groups()
-        reindeers.append(Reindeer(name, int(speed), int(fly_duration), int(rest_duration)))
+        for i in range(0, 2503):
+            for reindeer in reindeers:
+                reindeer.fly()
+            for best in self.find_leading(reindeers):
+                best[0].give_point()
 
-    for i in range(0, 2503):
+        best_distance = (0, reindeers[0])
+        best_points = (0, reindeers[0])
         for reindeer in reindeers:
-            reindeer.fly()
-        for best in find_leading(reindeers):
-            best[0].give_point()
+            if best_distance[0] < reindeer.total_distance:
+                best_distance = (reindeer.total_distance, reindeer)
+            if best_points[0] < reindeer.points:
+                best_points = (reindeer.points, reindeer)
 
-    best_distance = (0, reindeers[0])
-    best_points = (0, reindeers[0])
-    for reindeer in reindeers:
-        if best_distance[0] < reindeer.total_distance:
-            best_distance = (reindeer.total_distance, reindeer)
-        if best_points[0] < reindeer.points:
-            best_points = (reindeer.points, reindeer)
+        for reindeer in reindeers:
+            self.log.debug(reindeer)
 
-    for reindeer in reindeers:
-        print reindeer
+        part1 = best_distance
+        part2 = best_points
 
-    part1 = best_distance
-    part2 = best_points
-
-    print 'part 1 : %d (%s)' % (part1[0], part1[1])
-    print 'part 2 : %d (%s)' % (part2[0], part2[1])
+        self.log.info('part 1 : %d (%s)' % (part1[0], part1[1]))
+        self.log.info('part 2 : %d (%s)' % (part2[0], part2[1]))
 
 if __name__ == '__main__':
-    # unittest.main()
-    lines = []
-    with open('input') as file:
-    # with open('example_input') as file:
-        for line in file:
-            lines.append(line.strip())
-    main(lines)
+    Day14().run()
