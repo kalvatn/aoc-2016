@@ -13,14 +13,48 @@ VERBOSE = False
 RUN_TESTS = False
 VISUALIZE = False
 
+TRAP = '^'
+SAFE = '.'
+
+RULE_1 = (TRAP * 2) + SAFE
+RULE_2 = SAFE + (TRAP * 2)
+RULE_3 = TRAP + (2 * SAFE)
+RULE_4 = (SAFE * 2) + TRAP
+TRAP_RULES = [ RULE_1, RULE_2, RULE_3, RULE_4 ]
+
+def generate(line):
+    next_line = ''
+    for i in range(0, len(line)):
+        l = line[i-1] if i > 0 else SAFE
+        r = line[i+1] if i < len(line) - 1 else SAFE
+        c = line[i]
+
+        if l + c + r in TRAP_RULES:
+            next_line += TRAP
+        else:
+            next_line += SAFE
+    return next_line
+
+
+def solve(line, rows):
+    count_safe = line.count(SAFE)
+    debug('%s (%d)' % (line, count_safe))
+    for i in range(0, rows - 1):
+        new_line = generate(line)
+        line_safe = new_line.count(SAFE)
+        count_safe += line_safe
+        debug('%s (%d)' % (new_line, line_safe))
+        line = new_line
+    return count_safe
+
+
 def main():
     example_lines = get_input_lines(input_file='example_input')
     lines = get_input_lines()
-    part1_example = None
-    part1 = None
 
-    part2_example = None
-    part2 = None
+    part1_example = solve(example_lines[0], 10)
+    part1 = solve(lines[0], 40)
+    part2 = solve(lines[0], 400000)
 
     info('part 1')
     info('example  : %s' % (part1_example))
@@ -29,7 +63,6 @@ def main():
     print
 
     info('part 2')
-    info('example  : %s' % (part2_example))
     info('solution : %s' % (part2))
 
 class Test(unittest.TestCase):
