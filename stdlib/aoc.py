@@ -42,14 +42,6 @@ class Day(object):
             self.verbose,
             self.visualize))
 
-
-    @staticmethod
-    def create_from_args(name, args):
-        visualize = '--visualize' in args
-        verbose = '--verbose' in args or '-v' in args
-        return Day(name, verbose, visualize)
-
-
     def read_input(self, input_file='input'):
         lines = []
         filepath = os.path.join(os.path.dirname(self.name), input_file)
