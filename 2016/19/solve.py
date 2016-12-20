@@ -34,6 +34,7 @@ class Day19(aoc.Day):
         number_of_elves = 5
 
         elves = self.generate_elves(number_of_elves)
+        # elves = self.generate_elves(number_of_elves, across=True)
         elf = elves[0]
         while elf.next != elf:
             next_elf = elf.next
@@ -42,22 +43,32 @@ class Day19(aoc.Day):
             elf = elf.next
         self.log.debug('%d elves : winner : %s' % (number_of_elves, elf))
 
-    def generate_elves(self, number_of_elves):
+    def generate_elves(self, number_of_elves, across=False):
         elves = []
         for i in range(1, number_of_elves + 1):
             elves.append(Elf(i))
         head = elves[0]
         tail = elves[-1]
-        for i in range(0, len(elves)):
-            elf = elves[i]
-            if i + 1 >= len(elves):
-                elf.next = head
-            else:
-                elf.next = elves[i+1]
-            if i - 1 < 0:
-                elf.prev = tail
-            else:
-                elf.prev = elves[i-1]
+        if not across:
+            for i in range(0, len(elves)):
+                elf = elves[i]
+                if i == len(elves):
+                    elf.next = head
+                else:
+                    elf.next = elves[i+1]
+                if i - 1 < 0:
+                    elf.prev = tail
+                else:
+                    elf.prev = elves[i-1]
+        else:
+            for i in range(0, len(elves)):
+                elf = elves[i]
+                number_of_elves -= 1
+                next_index = (number_of_elves / 2)
+                rest = ((number_of_elves / 2) % number_of_elves)
+                next_index += rest
+                self.log.debug('%d -> %d, rest : %d' % (i, next_index, rest))
+
 
         return elves
 
