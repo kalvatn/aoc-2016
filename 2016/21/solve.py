@@ -80,7 +80,8 @@ class Day21(aoc.Day):
     def run(self):
         password = 'abcdefgh'
         part1 = self.scramble(password)
-        part2 = self.scramble(part1, unscramble=True)
+        password = 'fbgdceah'
+        part2 = self.scramble(password, unscramble=True)
 
         self.log.info('part 1 : %s' % (part1))
         self.log.info('part 2 : %s' % (part2))
