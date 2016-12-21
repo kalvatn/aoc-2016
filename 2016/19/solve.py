@@ -13,6 +13,13 @@ class Elf(object):
         self.next.presents = 0
         self.next.leave_ring()
 
+    def take_presents_from_across(self, elves, elves_remaining):
+        across_index = elves_remaining / 2
+        elf_across = elves[across_index]
+        self.presents += elf_across.presents
+        elf_across.presents = 0
+        elf_across.leave_ring()
+
     def leave_ring(self):
         self.prev.next = self.next
         self.next.prev = self.prev
@@ -34,12 +41,21 @@ class Day19(aoc.Day):
         number_of_elves = 5
 
         elves = self.generate_elves(number_of_elves)
-        # elves = self.generate_elves(number_of_elves, across=True)
         elf = elves[0]
         while elf.next != elf:
             next_elf = elf.next
             self.log.debug("elf %d takes elf %d's %d presents" % (elf.number, next_elf.number, next_elf.presents))
             elf.take_presents_from_next()
+            elf = elf.next
+        self.log.debug('%d elves : winner : %s' % (number_of_elves, elf))
+
+        elves = self.generate_elves(number_of_elves)
+        elf = elves[0]
+        elves_remaining = number_of_elves
+        while elf.next != elf:
+            next_elf = elf.next
+            elf.take_presents_from_across(elves, elves_remaining)
+            elves_remaining -= 1
             elf = elf.next
         self.log.debug('%d elves : winner : %s' % (number_of_elves, elf))
 
@@ -49,26 +65,16 @@ class Day19(aoc.Day):
             elves.append(Elf(i))
         head = elves[0]
         tail = elves[-1]
-        if not across:
-            for i in range(0, len(elves)):
-                elf = elves[i]
-                if i == len(elves):
-                    elf.next = head
-                else:
-                    elf.next = elves[i+1]
-                if i - 1 < 0:
-                    elf.prev = tail
-                else:
-                    elf.prev = elves[i-1]
-        else:
-            for i in range(0, len(elves)):
-                elf = elves[i]
-                number_of_elves -= 1
-                next_index = (number_of_elves / 2)
-                rest = ((number_of_elves / 2) % number_of_elves)
-                next_index += rest
-                self.log.debug('%d -> %d, rest : %d' % (i, next_index, rest))
-
+        for i in range(0, len(elves)):
+            elf = elves[i]
+            if i + 1 >= len(elves):
+                elf.next = head
+            else:
+                elf.next = elves[i+1]
+            if i - 1 < 0:
+                elf.prev = tail
+            else:
+                elf.prev = elves[i-1]
 
         return elves
 
