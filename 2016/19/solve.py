@@ -13,12 +13,10 @@ class Elf(object):
         self.next.presents = 0
         self.next.leave_ring()
 
-    def take_presents_from_across(self, elves, elves_remaining):
-        across_index = elves_remaining / 2
-        elf_across = elves[across_index]
-        self.presents += elf_across.presents
-        elf_across.presents = 0
-        elf_across.leave_ring()
+    def take_presents_from_across(self, across):
+        self.presents += across.presents
+        across.presents = 0
+        across.leave_ring()
 
     def leave_ring(self):
         self.prev.next = self.next
@@ -34,49 +32,58 @@ class Day19(aoc.Day):
     def __init__(self):
         super(Day19, self).__init__(__file__)
 
-    def run(self):
-        line = self.read_input()[0]
-
-        # number_of_elves = int(line)
-        number_of_elves = 5
-
-        elves = self.generate_elves(number_of_elves)
-        elf = elves[0]
-        while elf.next != elf:
-            next_elf = elf.next
-            self.log.debug("elf %d takes elf %d's %d presents" % (elf.number, next_elf.number, next_elf.presents))
-            elf.take_presents_from_next()
-            elf = elf.next
-        self.log.debug('%d elves : winner : %s' % (number_of_elves, elf))
-
-        elves = self.generate_elves(number_of_elves)
-        elf = elves[0]
-        elves_remaining = number_of_elves
-        while elf.next != elf:
-            next_elf = elf.next
-            elf.take_presents_from_across(elves, elves_remaining)
-            elves_remaining -= 1
-            elf = elf.next
-        self.log.debug('%d elves : winner : %s' % (number_of_elves, elf))
 
     def generate_elves(self, number_of_elves, across=False):
         elves = []
-        for i in range(1, number_of_elves + 1):
-            elves.append(Elf(i))
+        for i in range(0, number_of_elves):
+            elf = Elf(i+1)
+            if i > 0:
+                elf.prev = elves[i-1]
+                elves[i-1].next = elf
+            elves.append(elf)
         head = elves[0]
         tail = elves[-1]
-        for i in range(0, len(elves)):
-            elf = elves[i]
-            if i + 1 >= len(elves):
-                elf.next = head
-            else:
-                elf.next = elves[i+1]
-            if i - 1 < 0:
-                elf.prev = tail
-            else:
-                elf.prev = elves[i-1]
+        head.prev = tail
+        tail.next = head
 
         return elves
+
+    def part_one(self, number_of_elves):
+
+        elves = self.generate_elves(number_of_elves)
+        elf = elves[0]
+        while elf.next != elf:
+            next_elf = elf.next
+            # self.log.debug("elf %d takes elf %d's %d presents" % (elf.number, next_elf.number, next_elf.presents))
+            elf.take_presents_from_next()
+            elf = elf.next
+        return elf
+
+    def part_two(self, number_of_elves):
+
+        elves = self.generate_elves(number_of_elves)
+
+        elf = elves[0]
+        across = elves[number_of_elves / 2]
+        while number_of_elves > 1:
+            # self.log.debug("elf %d takes elf %d's %d presents" % (elf.number, across.number, across.presents))
+            elf.take_presents_from_across(across)
+            elf = elf.next
+            across = across.next
+            if number_of_elves % 2 == 1:
+                across = across.next
+            number_of_elves -= 1
+        return elf
+
+    def run(self):
+        line = self.read_input()[0]
+
+        number_of_elves = int(line)
+        # number_of_elves = 21
+
+        self.log.info('part1 : %s' % (self.part_one(number_of_elves)))
+        self.log.info('part2 : %s' % (self.part_two(number_of_elves)))
+
 
 if __name__ == '__main__':
     Day19().run()
