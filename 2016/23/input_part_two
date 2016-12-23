@@ -3,9 +3,9 @@ dec b
 cpy a d
 cpy 0 a
 cpy b c
-inc a
-dec c
-jnz c -2
+mul d b a
+cpy 0 c
+cpy 1 d
 dec d
 jnz d -5
 dec b

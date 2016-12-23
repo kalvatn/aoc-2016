@@ -39,7 +39,20 @@ class Machine(object):
         self._registers[register] -= 1
 
     def mul(self, register_factor1, register_factor2, register_target):
-        self._registers[register_target] = register_factor1 * register_factor2
+        factor1_value = 1
+        factor2_value = 1
+        try:
+            factor1_value = int(register_factor1)
+        except ValueError:
+            factor1_value = int(self._registers[register_factor1])
+
+        try:
+            factor2_value = int(register_factor2)
+        except ValueError:
+            factor2_value = int(self._registers[register_factor2])
+
+        self.log.info('mul %d * %d -> %s' % (factor1_value, factor2_value, register_target))
+        self._registers[register_target] = factor1_value * factor2_value
 
     def jnz(self, register, jump):
         # print 'before jnz(%s, %d), cursor : %d' % (register, jump, self.cursor)
@@ -127,7 +140,7 @@ class Machine(object):
         while self.cursor >= 0 and self.cursor < len(self.instructions):
             self.step()
             if visualize:
-                time.sleep(0.5)
+                time.sleep(0.05)
 
 class Day23(aoc.Day):
     def __init__(self):
@@ -136,14 +149,15 @@ class Day23(aoc.Day):
     def part_one(self):
         instructions = self.read_input()
         # instructions = self.read_input(input_file='example_input')
+        # instructions = self.read_input(input_file='input_henrik')
         self.machine = Machine(instructions, log=self.log)
         self.machine._registers['a'] = 7
         self.machine.process_instructions(self.visualize)
         return self.machine.registers['a']
 
     def part_two(self):
-        instructions = self.read_input()
-        # instructions = self.read_input(input_file='example_input')
+        instructions = self.read_input(input_file='input_part_two')
+        # instructions = self.read_input(input_file='input_henrik')
         self.machine = Machine(instructions, log=self.log)
         self.machine._registers['a'] = 12
         self.machine.process_instructions(self.visualize)
@@ -151,9 +165,10 @@ class Day23(aoc.Day):
 
 
     def run(self):
-        self.log.info('part 1 : %d' % (self.part_one()))
-        time.sleep(5)
-        self.log.info('part 2 : %d' % (self.part_two()))
+        part1 = self.part_one()
+        part2 = self.part_two()
+        self.log.info('part 1 : %d' % (part1))
+        self.log.info('part 2 : %d' % (part2))
 
 if __name__ == '__main__':
     Day23().run()
