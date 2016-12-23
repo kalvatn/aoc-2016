@@ -38,6 +38,9 @@ class Machine(object):
     def dec(self, register):
         self._registers[register] -= 1
 
+    def mul(self, register_factor1, register_factor2, register_target):
+        self._registers[register_target] = register_factor1 * register_factor2
+
     def jnz(self, register, jump):
         # print 'before jnz(%s, %d), cursor : %d' % (register, jump, self.cursor)
         # print self.registers
@@ -109,6 +112,8 @@ class Machine(object):
             self.jnz(args[0], args[1])
         elif cmd == 'tgl':
             self.tgl(args[0])
+        elif cmd == 'mul':
+            self.mul(args[0], args[1], args[2])
         else:
             raise ValueError("invalid instruction '%s'" % (instruction))
 
